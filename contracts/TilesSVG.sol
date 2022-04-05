@@ -1,27 +1,28 @@
 // SPDX-License-Identifier: MIT
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@jbox/sol/contracts/abstract/JuiceboxProject.sol";
-import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
+import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
+import '@openzeppelin/contracts/utils/math/SafeMath.sol';
+import '@jbox/sol/contracts/abstract/JuiceboxProject.sol';
+import {Strings} from '@openzeppelin/contracts/utils/Strings.sol';
 
-import "./StringHelpers.sol";
-import "./TilePart.sol";
-import "./Tile.sol";
+import './StringHelpers.sol';
+import './TilePart.sol';
+import './Tile.sol';
+import './Base64.sol';
 
 pragma solidity ^0.8.6;
 
 // contract TilesSvg is Tile, TilePart, StringHelpers, JuiceboxProject, ERC721Enumerable, Ownable  {
 
-contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
+contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable {
     using SafeMath for uint256;
 
     event Mint(address to, address tileAddress);
-    
-    bool public saleIsActive = false;    
+
+    bool public saleIsActive = false;
     uint256 public mintedReservesLimit = 1000;
-    uint256 public mintedReservesCount = 0;    
+    uint256 public mintedReservesCount = 0;
     string public OPENSEA_STORE_METADATA = 'ipfs://CID';
 
     mapping(address => uint256) public idOfAddress;
@@ -35,10 +36,10 @@ contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
         bool solid;
     }
 
-    string private red = "#FE4465";
-    string private black = "#222";
-    string private blue = "#1A49EF";
-    string private yellow = "#F8D938";
+    string private red = '#FE4465';
+    string private black = '#222';
+    string private blue = '#1A49EF';
+    string private yellow = '#F8D938';
 
     string[][] private sectorColorVariants = [
         [red, yellow, black],
@@ -59,11 +60,7 @@ contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
         [yellow, black, red]
     ];
 
-    function bytesToChars(address _address)
-        private
-        pure
-        returns (uint16[] memory)
-    {
+    function bytesToChars(address _address) private pure returns (uint16[] memory) {
         uint16[] memory chars = new uint16[](40);
         uint160 temp = uint160(_address);
         uint32 i = 0;
@@ -77,11 +74,7 @@ contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
         return chars;
     }
 
-    function sectorColorsFromInt16(uint16 char, uint8 r)
-        private
-        view
-        returns (string memory)
-    {
+    function sectorColorsFromInt16(uint16 char, uint8 r) private view returns (string memory) {
         string[] memory colors = sectorColorVariants[char];
         return colors[r];
     }
@@ -95,7 +88,7 @@ contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
         return (svgs[chars[i + 1][r + 1]], color);
     }
 
-    constructor() ERC721("Tiles", "TILES") {  }
+    constructor() ERC721('Tiles', 'TILES') {}
 
     /*
     constructor(
@@ -107,13 +100,9 @@ contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
     }
 
     */
-    
+
     // Get IDs for all tokens owned by `_owner`
-    function tokensOfOwner(address _owner)
-        external
-        view
-        returns (uint256[] memory)
-    {
+    function tokensOfOwner(address _owner) external view returns (uint256[] memory) {
         uint256 tokenCount = balanceOf(_owner);
         if (tokenCount == 0) {
             // Return an empty array
@@ -127,7 +116,6 @@ contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
             return result;
         }
     }
-
 
     function calculatePrice() public view returns (uint256) {
         require(saleIsActive == true, "Sale hasn't started");
@@ -168,34 +156,23 @@ contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
     */
     function collectTile() external payable {
         uint256 tokenId = idOfAddress[msg.sender];
-        require(tokenId != 0, "Tile for sender address has not been minted");
+        require(tokenId != 0, 'Tile for sender address has not been minted');
         address owner = ownerOf(tokenId);
-        require(owner != msg.sender, "Sender already owns this Tile");
-        require(
-            msg.value >= calculatePrice(),
-            "Ether value sent is below the price"
-        );
+        require(owner != msg.sender, 'Sender already owns this Tile');
+        require(msg.value >= calculatePrice(), 'Ether value sent is below the price');
         require(payable(owner).send(msg.value));
         _transfer(owner, msg.sender, tokenId);
     }
 
-    function mintReserveTile(address to, address _tileAddress)
-        external
-        onlyOwner
-        returns (uint256)
-    {
-        require(
-            mintedReservesCount < mintedReservesLimit,
-            "Reserves limit exceeded"
-        );
+    function mintReserveTile(address to, address _tileAddress) external onlyOwner returns (uint256) {
+        require(mintedReservesCount < mintedReservesLimit, 'Reserves limit exceeded');
 
         mintedReservesCount = mintedReservesCount + 1;
         return _mintTile(to, _tileAddress);
     }
 
-
-    function mintTile(address _tileAddress) external payable returns (uint256) {        
-        // Take fee into TileDAO Juicebox treasury  
+    function mintTile(address _tileAddress) external payable returns (uint256) {
+        // Take fee into TileDAO Juicebox treasury
         /*      
         require(
             msg.value >= calculatePrice(),
@@ -213,7 +190,7 @@ contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
             ),
             false
         );
-        */        
+        */
         return _mintTile(msg.sender, _tileAddress);
     }
 
@@ -222,15 +199,11 @@ contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
             tokenId, and a mapping of the _tileAddress
             private
     */
-    function _mintTile(address to, address _tileAddress) private returns (uint256)
-    {
-        require(
-            idOfAddress[_tileAddress] == 0,
-            "Tile already minted for address"
-        );
-        
-        uint256 tokenId = totalSupply() + 1;        
-        _safeMint(to, tokenId);        
+    function _mintTile(address to, address _tileAddress) private returns (uint256) {
+        require(idOfAddress[_tileAddress] == 0, 'Tile already minted for address');
+
+        uint256 tokenId = totalSupply() + 1;
+        _safeMint(to, tokenId);
         idOfAddress[_tileAddress] = tokenId;
         tileAddressOf[tokenId] = _tileAddress;
         _tokenUri(_tileAddress);
@@ -238,41 +211,30 @@ contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
         return tokenId;
     }
 
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        override
-        returns (string memory)
-    {
-        require(
-            _exists(tokenId),
-            "ERC721Metadata: URI query for nonexistent token"
-        );
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        require(_exists(tokenId), 'ERC721Metadata: URI query for nonexistent token');
 
-        return _tokenUri(address(tileAddressOf[tokenId]));            
+        return _tokenUri(address(tileAddressOf[tokenId]));
     }
 
     function _tokenUri(address addr) public view returns (string memory) {
         string memory str = head;
         uint16[4][10] memory addressSegments;
         uint16[] memory chars = bytesToChars(addr);
-        
+
         for (uint16 i = 0; i < 10; i++) {
             addressSegments[i][0] = chars[i * 4 + 0];
             addressSegments[i][1] = chars[i * 4 + 1];
             addressSegments[i][2] = chars[i * 4 + 2];
             addressSegments[i][3] = chars[i * 4 + 3];
-        }        
-        
+        }
+
         Ring[] memory rings = new Ring[](2);
 
-        uint160[2] memory indexes = [
-            (uint160(addr) / (16**38)) % 16**2,
-            (uint160(addr) / (16**36)) % 16**2
-        ];
-        
+        uint160[2] memory indexes = [(uint160(addr) / (16**38)) % 16**2, (uint160(addr) / (16**36)) % 16**2];
+
         uint8 ringsCount = 0;
-        
+
         for (uint256 i = 0; i < 2; i++) {
             if (indexes[i] == 0) continue;
             uint160 ringIndex = indexes[i] > 0 ? indexes[i] - 1 : indexes[i];
@@ -283,46 +245,34 @@ contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
             rings[ringsCount].solid = solid[ringIndex];
             ringsCount += 1;
         }
-        
+
         for (uint8 r = 0; r < 3; r++) {
             for (uint8 i = 0; i < 9; i++) {
-                (string memory svg, string memory color) = generateTileSectors(
-                    addressSegments,
-                    i,
-                    r
-                );
-                if (stringStartsWith(svg, "<path")) {
+                (string memory svg, string memory color) = generateTileSectors(addressSegments, i, r);
+                if (stringStartsWith(svg, '<path')) {
                     str = string(
                         abi.encodePacked(
                             str,
                             '<g transform="matrix(1,0,0,1,',
                             Strings.toString((i % 3) * 100),
-                            ",",
+                            ',',
                             Strings.toString(((i % 9) / 3) * 100),
                             ')">',
-                            replace(
-                                replace(svg, "#000", color),
-                                "/>",
-                                ' style="opacity: 0.88;" />'
-                            ),
-                            "</g>"
+                            replace(replace(svg, '#000', color), '/>', ' style="opacity: 0.88;" />'),
+                            '</g>'
                         )
                     );
-                } else if (stringStartsWith(svg, "<circle")) {
+                } else if (stringStartsWith(svg, '<circle')) {
                     str = string(
                         abi.encodePacked(
                             str,
                             '<g transform="matrix(1,0,0,1,',
                             Strings.toString((i % 3) * 100),
-                            ",",
+                            ',',
                             Strings.toString(((i % 9) / 3) * 100),
                             ')">',
-                            replace(
-                                replace(svg, "#000", color),
-                                "/>",
-                                ' style="opacity: 0.88;" />'
-                            ),
-                            "</g>"
+                            replace(replace(svg, '#000', color), '/>', ' style="opacity: 0.88;" />'),
+                            '</g>'
                         )
                     );
                 }
@@ -333,7 +283,7 @@ contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
                 if (ring.layer != r) {
                     continue;
                 }
-                
+
                 uint32 i;
                 uint32 posX;
                 uint32 posY;
@@ -354,9 +304,7 @@ contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
                 uint32 posI = uint32(ring.positionIndex);
                 if (!ring.positionKind) {
                     posX = (posI % 4) * 100;
-                    posY = posI > 11 ? 300 : posI > 7 ? 200 : posI > 3
-                        ? 100
-                        : 0;
+                    posY = posI > 11 ? 300 : posI > 7 ? 200 : posI > 3 ? 100 : 0;
                 } else if (ring.positionKind) {
                     posX = 100 * (posI % 3) + 50;
                     posY = (posI > 5 ? 2 * 100 : posI > 2 ? 100 : 0) + 50;
@@ -366,12 +314,12 @@ contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
                         str,
                         '<g transform="matrix(1,0,0,1,',
                         Strings.toString(posX),
-                        ",",
+                        ',',
                         Strings.toString(posY),
                         ')"><circle r="',
                         divide(diameter10x, 20, 5),
                         '" fill="',
-                        ring.solid ? canvasColor : "none",
+                        ring.solid ? canvasColor : 'none',
                         '" stroke-width="10" stroke="',
                         canvasColor,
                         '" /></g>'
@@ -380,17 +328,41 @@ contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
             }
         }
 
-        return string(abi.encodePacked(str, foot));
+        str = string(abi.encodePacked(str, foot));
+        string memory json = Base64.encode(
+            bytes(
+                string(
+                    abi.encodePacked(
+                        '{"name": "Tiles #',
+                        Strings.toString(uint256(uint160(addr))),
+                        '","attributes": [ { "trait_type": "Color", "value": "',
+                        'colorName',
+                        '" }, { "trait_type": "Unique Tiles", "value": ',
+                        '0',
+                        ' }, { "trait_type": "Rings", "value": ',
+                        '0',
+                        ' }, { "trait_type": "Frequency Multiple", "value": ',
+                        Strings.toString(0),
+                        ' }]',
+                        ', "description": "description goes here", "image": "data:image/svg+xml;base64,',
+                        Base64.encode(bytes(string(abi.encodePacked(str)))),
+                        '"}'
+                    )
+                )
+            )
+        );
+        string memory output = string(abi.encodePacked('data:application/json;base64,', json));
+
+        return output;
     }
 
     function startSale() external onlyOwner {
-        require(saleIsActive == false, "Sale is already active");
+        require(saleIsActive == false, 'Sale is already active');
         saleIsActive = true;
     }
 
     function pauseSale() external onlyOwner {
-        require(saleIsActive == true, "Sale is already inactive");
+        require(saleIsActive == true, 'Sale is already inactive');
         saleIsActive = false;
     }
-    
 }
