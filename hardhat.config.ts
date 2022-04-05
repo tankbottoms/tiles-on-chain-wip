@@ -129,9 +129,7 @@ const config: HardhatUserConfig = {
                         runs: 800,
                     },
                 },
-            },
-            { version: '0.7.0' },
-            { version: '0.6.0' },
+            }
         ],
     },
     etherscan: {
