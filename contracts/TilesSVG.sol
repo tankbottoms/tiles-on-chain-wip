@@ -3,11 +3,11 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@jbox/sol/contracts/abstract/JuiceboxProject.sol";
-import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 pragma solidity 0.8.6;
 
-contract TilesSVG {
+contract TilesSvg {
     string[] svgs = [
         '<path d="M100 100L100 0H0C0 55.2285 44.7715 100 100 100Z" fill="#000"/>',
         '<path d="M0 100L0 0H100C100 55.2285 55.2285 100 0 100Z" fill="#000"/>',
@@ -1411,8 +1411,8 @@ contract TilesSVG {
         ];
         uint8 ringsCount = 0;
         for (uint256 i = 0; i < 2; i++) {
+            if (indexes[i] == 0) continue;
             uint160 ringIndex = indexes[i] > 0 ? indexes[i] - 1 : indexes[i];
-            if (ringIndex == 0) continue;
             rings[ringsCount].positionIndex = positionIndex[ringIndex];
             rings[ringsCount].size = size[ringIndex];
             rings[ringsCount].layer = layer[ringIndex];
@@ -1473,25 +1473,22 @@ contract TilesSVG {
                 uint32 i;
                 uint32 posX;
                 uint32 posY;
-                uint32 diameter;
+                uint32 diameter10x;
 
                 if (ring.size == 0) {
-                    diameter = 10;
+                    diameter10x = 100;
                 } else if (ring.size == 1) {
-                    diameter = 49;
+                    diameter10x = 488;
                 } else if (ring.size == 2) {
-                    diameter = 90;
+                    diameter10x = 900;
                 } else if (ring.size == 3) {
-                    diameter = 190;
+                    diameter10x = 1900;
                 }
                 if (2 == ring.layer) {
-                    diameter += 1;
+                    diameter10x += 5;
                 }
                 uint32 posI = uint32(ring.positionIndex);
-                if (
-                    (2 == ring.layer && diameter != 0) ||
-                    ring.positionKind == false
-                ) {
+                if (!ring.positionKind) {
                     posX = (posI % 4) * 100;
                     posY = posI > 11 ? 300 : posI > 7 ? 200 : posI > 3
                         ? 100
@@ -1508,7 +1505,7 @@ contract TilesSVG {
                         ",",
                         Strings.toString(posY),
                         ')"><circle r="',
-                        Strings.toString(diameter / 2),
+                        divide(diameter10x, 20, 5),
                         '" fill="',
                         ring.solid ? canvasColor : "none",
                         '" stroke-width="10" stroke="',
@@ -1519,15 +1516,14 @@ contract TilesSVG {
             }
         }
 
-        str = string(abi.encodePacked(str, foot));
-        return str;
+        return string(abi.encodePacked(str, foot));
     }
 
     function replace(
         string memory _str,
         string memory _from,
         string memory _to
-    ) private view returns (string memory) {
+    ) private pure returns (string memory) {
         bytes memory _strBytes = abi.encodePacked(_str);
         bytes memory _fromBytes = abi.encodePacked(_from);
         bytes memory _toBytes = abi.encodePacked(_to);
@@ -1579,5 +1575,39 @@ contract TilesSVG {
         return
             keccak256(abi.encodePacked(_prefixBytes)) ==
             keccak256(abi.encodePacked(_tempString));
+    }
+
+    function divide(
+        uint256 _a,
+        uint256 _b,
+        uint256 n
+    ) internal pure returns (string memory) {
+        uint256 c = _a / _b;
+        uint256 d = (_a * (10**n)) / _b;
+
+        bytes memory _cBytes = abi.encodePacked(
+            c > 0 ? Strings.toString(c) : ""
+        );
+        bytes memory _dBytes = abi.encodePacked(
+            d > 0 ? Strings.toString(d) : "0"
+        );
+        bytes memory _finalBytes = new bytes(_cBytes.length + 1 + n);
+
+        for (uint256 i = 0; i <= _cBytes.length; i++) {
+            if (i < _cBytes.length) {
+                _finalBytes[i] = _cBytes[i];
+            } else if (i == _cBytes.length) {
+                _finalBytes[i] = bytes1(uint8(46));
+            }
+        }
+
+        for (
+            uint256 i = 0;
+            i < (_dBytes.length > n ? n : _dBytes.length);
+            i++
+        ) {
+            _finalBytes[i + _cBytes.length + 1] = _dBytes[_cBytes.length + i];
+        }
+        return string(_finalBytes);
     }
 }
