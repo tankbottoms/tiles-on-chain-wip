@@ -1,1323 +1,32 @@
 // SPDX-License-Identifier: MIT
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@jbox/sol/contracts/abstract/JuiceboxProject.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
-pragma solidity 0.8.6;
+import "./StringHelpers.sol";
+import "./TilePart.sol";
+import "./Tile.sol";
 
-contract TilesSvg {
-    string[] svgs = [
-        '<path d="M100 100L100 0H0C0 55.2285 44.7715 100 100 100Z" fill="#000"/>',
-        '<path d="M0 100L0 0H100C100 55.2285 55.2285 100 0 100Z" fill="#000"/>',
-        '<path d="M0 0L0 100H100C100 44.7715 55.2285 0 0 0Z" fill="#000"/>',
-        '<path d="M100 0L100 100H0C0 44.7715 44.7715 0 100 0Z" fill="#000"/>',
-        '<circle cx="50" cy="50" r="50" fill="#000" transform="matrix(1,0,0,1,0,0)" />',
-        '<circle cx="20" cy="20" r="20" fill="#000" transform="matrix(1,0,0,1,30,30)" />',
-        '<path d="M0 0C0 55.2285 44.7715 100 100 100C100 44.7715 55.2285 0 0 0Z" fill="#000"/>',
-        '<path d="M0 100C0 44.7715 44.7715 0 100 0C100 55.2285 55.2285 100 0 100Z" fill="#000"/>',
-        '<path d="M100 0H0L100 100V0Z" fill="#000"/>',
-        '<path d="M0 0H100L0 100V0Z" fill="#000"/>',
-        '<path d="M0 100H100L0 0V100Z" fill="#000"/>',
-        '<path d="M100 100H0L100 0V100Z" fill="#000"/>',
-        '<path d="M50 100C50 72.3858 27.6142 50 0 50V100H50Z" fill="#000"/>',
-        '<path d="M50 100C50 72.3858 72.3858 50 100 50V100H50Z" fill="#000"/>',
-        '<path d="M50 0C50 27.6142 72.3858 50 100 50V0H50Z" fill="#000"/>',
-        '<path d="M50 0C50 27.6142 27.6142 50 0 50V0H50Z" fill="#000"/>'
-    ];
+pragma solidity ^0.8.6;
 
-    string canvasColor = "#faf3e8";
-    string head =
-        string(
-            abi.encodePacked(
-                '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.dev/svgjs" version="1.1" width="360" height="360" id="SvgjsSvg1000"><rect width="360" height="360" fill="',
-                canvasColor,
-                '" /><g transform="matrix(1,0,0,1,30,30)"><g>'
-            )
-        );
-    string foot = "</g></g></svg>";
-    uint16 sectorSize = 100;
+/*
+    contract TilesSvg is Tile, TilePart, StringHelpers, JuiceboxProject, ERC721Enumerable  {
+*/
 
-    uint8[] private positionIndex = [
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        2,
-        2,
-        2,
-        3,
-        3,
-        3,
-        4,
-        4,
-        4,
-        5,
-        5,
-        5,
-        6,
-        6,
-        6,
-        7,
-        7,
-        7,
-        8,
-        8,
-        8,
-        9,
-        9,
-        9,
-        10,
-        10,
-        10,
-        11,
-        11,
-        11,
-        12,
-        12,
-        12,
-        13,
-        13,
-        13,
-        14,
-        14,
-        14,
-        15,
-        15,
-        15,
-        0,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        1,
-        2,
-        2,
-        2,
-        2,
-        3,
-        3,
-        3,
-        3,
-        4,
-        4,
-        4,
-        4,
-        5,
-        5,
-        5,
-        5,
-        6,
-        6,
-        6,
-        6,
-        7,
-        7,
-        7,
-        7,
-        8,
-        8,
-        8,
-        8,
-        9,
-        9,
-        9,
-        9,
-        10,
-        10,
-        10,
-        10,
-        11,
-        11,
-        11,
-        11,
-        12,
-        12,
-        12,
-        12,
-        13,
-        13,
-        13,
-        13,
-        14,
-        14,
-        14,
-        14,
-        15,
-        15,
-        15,
-        15,
-        0,
-        0,
-        1,
-        1,
-        2,
-        2,
-        3,
-        3,
-        4,
-        4,
-        5,
-        5,
-        6,
-        6,
-        7,
-        7,
-        8,
-        8,
-        9,
-        9,
-        10,
-        10,
-        11,
-        11,
-        12,
-        12,
-        13,
-        13,
-        14,
-        14,
-        15,
-        15,
-        0,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        1,
-        2,
-        2,
-        2,
-        2,
-        3,
-        3,
-        3,
-        3,
-        4,
-        4,
-        4,
-        4,
-        5,
-        5,
-        5,
-        5,
-        6,
-        6,
-        6,
-        6,
-        7,
-        7,
-        7,
-        7,
-        8,
-        8,
-        8,
-        8,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        4,
-        4,
-        4,
-        4,
-        4,
-        4,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        8,
-        8,
-        8,
-        8,
-        8,
-        8,
-        0,
-        0,
-        1,
-        1,
-        2,
-        2,
-        3,
-        3,
-        4,
-        4,
-        5,
-        5,
-        6,
-        6,
-        7,
-        7,
-        8,
-        8,
-        4,
-        4
-    ];
-    uint8[] private size = [
-        1,
-        2,
-        3,
-        1,
-        2,
-        3,
-        1,
-        2,
-        3,
-        1,
-        2,
-        3,
-        1,
-        2,
-        3,
-        1,
-        2,
-        3,
-        1,
-        2,
-        3,
-        1,
-        2,
-        3,
-        1,
-        2,
-        3,
-        1,
-        2,
-        3,
-        1,
-        2,
-        3,
-        1,
-        2,
-        3,
-        1,
-        2,
-        3,
-        1,
-        2,
-        3,
-        1,
-        2,
-        3,
-        1,
-        2,
-        3,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        2,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        1,
-        2
-    ];
-    uint8[] private layer = [
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        1,
-        2,
-        0,
-        1,
-        2,
-        0,
-        1,
-        2,
-        0,
-        1,
-        2,
-        0,
-        1,
-        2,
-        0,
-        1,
-        2,
-        0,
-        1,
-        2,
-        0,
-        1,
-        2,
-        0,
-        1,
-        2,
-        0,
-        1,
-        2,
-        0,
-        1,
-        2,
-        0,
-        1,
-        2,
-        0,
-        1,
-        2,
-        0,
-        1,
-        2,
-        0,
-        1,
-        2,
-        0,
-        1,
-        2,
-        0,
-        1,
-        2,
-        0,
-        1,
-        2,
-        0,
-        1,
-        2,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        1,
-        0,
-        0
-    ];
-    bool[] private positionKind = [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true
-    ];
-    bool[] private solid = [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        false,
-        false
-    ];
+contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
+    using SafeMath for uint256;
+
+    event Mint(address to, address tileAddress);
+    
+    bool public saleIsActive = false;    
+    uint256 public mintedReservesLimit = 1000;
+    uint256 public mintedReservesCount = 0;    
+
+    mapping(address => uint256) public idOfAddress;
+    mapping(uint256 => address) public tileAddressOf;
 
     struct Ring {
         uint8 positionIndex;
@@ -1350,6 +59,19 @@ contract TilesSvg {
         [yellow, black, blue],
         [yellow, black, red]
     ];
+
+    constructor() ERC721("Tiles", "TILES") {  }
+
+    /*
+    constructor(
+        uint256 _projectID,
+        ITerminalDirectory _terminalDirectory,
+        string memory _baseURI
+    ) JuiceboxProject(_projectID, _terminalDirectory) ERC721("Tiles", "TILES") {
+        baseURI = _baseURI;
+    }
+
+    */
 
     function bytesToChars(address _address)
         private
@@ -1386,29 +108,121 @@ contract TilesSvg {
         string memory color = sectorColorsFromInt16(chars[i + 1][0], r);
         return (svgs[chars[i + 1][r + 1]], color);
     }
+    
+    function calculatePrice() public view returns (uint256) {
+        require(saleIsActive == true, "Sale hasn't started");
+        /*
+        uint256 currentSupply = totalSupply();
+    
+        if (currentSupply >= 102400) {
+            return 10240000000000000000; // 102,401 - ∞ : 10.24 ETH
+        } else if (currentSupply >= 51200) {
+            return 5120000000000000000; // 51,201 - 102,400 : 5.12 ETH
+        } else if (currentSupply >= 25600) {
+            return 2560000000000000000; // 25,601 - 51,200 : 2.56 ETH
+        } else if (currentSupply >= 12800) {
+            return 1280000000000000000; // 12,801 - 25,600 : 1.28 ETH
+        } else if (currentSupply >= 6400) {
+            return 640000000000000000; // 6,401 - 12,800 : 0.64 ETH
+        } else if (currentSupply >= 3200) {
+            return 320000000000000000; // 3,201 - 6,400 : 0.32 ETH
+        } else if (currentSupply >= 1600) {
+            return 160000000000000000; // 1,601 - 3,200 : 0.16 ETH
+        } else if (currentSupply >= 800) {
+            return 80000000000000000; // 801 - 1600 : 0.08 ETH
+        } else if (currentSupply >= 400) {
+            return 40000000000000000; // 401 - 800 : 0.04 ETH
+        } else if (currentSupply >= 200) {
+            return 20000000000000000; // 201 - 400 : 0.02 ETH
+        } else {
+            return 10000000000000000; // 1 - 200 : 0.01 ETH
+        }
+        */
 
-    // 0x458e5eBAe41DaEEd84A19893e71892F491515f83
-    function tokenUri(address addr) public view returns (string memory) {
+        return 10000000000000000; // 1 - 200 : 0.01 ETH
+    }
+
+    function mintTile(address _tileAddress) external payable returns (uint256) {
+        /*
+        require(
+            msg.value >= calculatePrice(),
+            "Ether value sent is below the price"
+        );
+        */
+
+        // Take fee into TileDAO Juicebox treasury
+        /*
+        _takeFee(
+            msg.value,
+            msg.sender,
+            string(
+                abi.encodePacked(
+                    "Minted Tile with address ",
+                    toAsciiString(_tileAddress)
+                )
+            ),
+            false
+        );
+        */
+        return _mintTile(msg.sender, _tileAddress);
+    }
+
+    /*
+        Minting a Tile just means to store the owner's address, tokenId, and a mapping of the _tileAddress
+    */
+    function _mintTile(address to, address _tileAddress)
+        private
+        returns (uint256)
+    {
+        require(
+            idOfAddress[_tileAddress] == 0,
+            "Tile already minted for address"
+        );
+        
+        uint256 tokenId = totalSupply() + 1;
+        _safeMint(to, tokenId);        
+        idOfAddress[_tileAddress] = tokenId;
+        tileAddressOf[tokenId] = _tileAddress;
+        emit Mint(to, _tileAddress);
+        return tokenId;
+    }
+
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        override
+        returns (string memory)
+    {
+        require(
+            _exists(tokenId),
+            "ERC721Metadata: URI query for nonexistent token"
+        );
+
+        return _tokenUri(address(tileAddressOf[tokenId]));            
+    }
+
+    // convert to private after testing
+    function _tokenUri(address addr) public view returns (string memory) {
         string memory str = head;
-
-        /////////////////////////////////////
         uint16[4][10] memory addressSegments;
         uint16[] memory chars = bytesToChars(addr);
-
+        
         for (uint16 i = 0; i < 10; i++) {
             addressSegments[i][0] = chars[i * 4 + 0];
             addressSegments[i][1] = chars[i * 4 + 1];
             addressSegments[i][2] = chars[i * 4 + 2];
             addressSegments[i][3] = chars[i * 4 + 3];
-        }
-
-        ////////////////////////////////////
+        }        
+        
         Ring[] memory rings = new Ring[](2);
+
         uint160[2] memory indexes = [
             (uint160(addr) / (16**38)) % 16**2,
             (uint160(addr) / (16**36)) % 16**2
         ];
+        
         uint8 ringsCount = 0;
+        
         for (uint256 i = 0; i < 2; i++) {
             if (indexes[i] == 0) continue;
             uint160 ringIndex = indexes[i] > 0 ? indexes[i] - 1 : indexes[i];
@@ -1419,7 +233,7 @@ contract TilesSvg {
             rings[ringsCount].solid = solid[ringIndex];
             ringsCount += 1;
         }
-        /////////////////////////////////////
+        
         for (uint8 r = 0; r < 3; r++) {
             for (uint8 i = 0; i < 9; i++) {
                 (string memory svg, string memory color) = generateTileSectors(
@@ -1427,7 +241,6 @@ contract TilesSvg {
                     i,
                     r
                 );
-
                 if (stringStartsWith(svg, "<path")) {
                     str = string(
                         abi.encodePacked(
@@ -1464,11 +277,13 @@ contract TilesSvg {
                     );
                 }
             }
+
             for (uint8 i = 0; i < ringsCount; i++) {
                 Ring memory ring = rings[i];
                 if (ring.layer != r) {
                     continue;
                 }
+                
                 uint32 i;
                 uint32 posX;
                 uint32 posY;
@@ -1518,95 +333,28 @@ contract TilesSvg {
         return string(abi.encodePacked(str, foot));
     }
 
-    function replace(
-        string memory _str,
-        string memory _from,
-        string memory _to
-    ) private pure returns (string memory) {
-        bytes memory _strBytes = abi.encodePacked(_str);
-        bytes memory _fromBytes = abi.encodePacked(_from);
-        bytes memory _toBytes = abi.encodePacked(_to);
-        uint256 i;
-        while (i <= _strBytes.length - _fromBytes.length) {
-            for (uint256 j = 0; j < _fromBytes.length; j++) {
-                if (_strBytes[i + j] != _fromBytes[j]) {
-                    break;
-                }
-                if (j == _fromBytes.length - 1) {
-                    bytes memory _newStrBytes = new bytes(
-                        _strBytes.length - _fromBytes.length + _toBytes.length
-                    );
-                    for (uint256 k = 0; k < i; k++) {
-                        _newStrBytes[k] = _strBytes[k];
-                    }
-                    for (uint256 k = 0; k < _toBytes.length; k++) {
-                        _newStrBytes[i + k] = _toBytes[k];
-                    }
-                    for (
-                        uint256 k = i + _fromBytes.length;
-                        k < _strBytes.length;
-                        k++
-                    ) {
-                        _newStrBytes[
-                            k - _fromBytes.length + _toBytes.length
-                        ] = _strBytes[k];
-                    }
-                    return string(_newStrBytes);
-                }
-            }
-            i++;
-        }
-
-        return _str;
+    function startSale() external onlyOwner {
+        require(saleIsActive == false, "Sale is already active");
+        saleIsActive = true;
     }
 
-    function stringStartsWith(string memory _str, string memory _prefix)
-        public
-        pure
-        returns (bool)
+    function pauseSale() external onlyOwner {
+        require(saleIsActive == true, "Sale is already inactive");
+        saleIsActive = false;
+    }
+    
+    function mintReserveTile(address to, address _tileAddress)
+        external
+        onlyOwner
+        returns (uint256)
     {
-        bytes memory _strBytes = bytes(_str);
-        bytes memory _prefixBytes = bytes(_prefix);
-        bytes memory _tempString = new bytes(_prefixBytes.length);
-        for (uint32 i = 0; i < _prefixBytes.length; i++) {
-            _tempString[i] = _strBytes[i];
-        }
-        return
-            keccak256(abi.encodePacked(_prefixBytes)) ==
-            keccak256(abi.encodePacked(_tempString));
+        require(
+            mintedReservesCount < mintedReservesLimit,
+            "Reserves limit exceeded"
+        );
+
+        mintedReservesCount = mintedReservesCount + 1;
+        return _mintTile(to, _tileAddress);
     }
 
-    function divide(
-        uint256 _a,
-        uint256 _b,
-        uint256 n
-    ) internal pure returns (string memory) {
-        uint256 c = _a / _b;
-        uint256 d = (_a * (10**n)) / _b;
-
-        bytes memory _cBytes = abi.encodePacked(
-            c > 0 ? Strings.toString(c) : ""
-        );
-        bytes memory _dBytes = abi.encodePacked(
-            d > 0 ? Strings.toString(d) : "0"
-        );
-        bytes memory _finalBytes = new bytes(_cBytes.length + 1 + n);
-
-        for (uint256 i = 0; i <= _cBytes.length; i++) {
-            if (i < _cBytes.length) {
-                _finalBytes[i] = _cBytes[i];
-            } else if (i == _cBytes.length) {
-                _finalBytes[i] = bytes1(uint8(46));
-            }
-        }
-
-        for (
-            uint256 i = 0;
-            i < (_dBytes.length > n ? n : _dBytes.length);
-            i++
-        ) {
-            _finalBytes[i + _cBytes.length + 1] = _dBytes[_cBytes.length + i];
-        }
-        return string(_finalBytes);
-    }
 }

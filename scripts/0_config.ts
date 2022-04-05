@@ -6,8 +6,17 @@ import path from 'path';
 const project_name = `Infinite Tiles`;
 const project_symbol = `TILE`;
 const project_description = `Humans are characterized by a desire to form communities around ideas, symbols, and artifacts that satisfy our overlapping interpretations of beauty. Tiles are a celebration of what gives meaning to those communities: the individual. \n There is one Tile generated for every possible ETH wallet address—each representing a unique identity in the decentralized ecosystem that makes projects like this possible. \n Mathematically, all Tiles are equally rare. They are all fashioned from the same assortment of simple shapes and colors, but each in a unique way. In that sense, Tiles are a bit like us. \n Owning a Tile is an invitation to participate in the TileDAO, which receives all revenue from the Tiles primary sale. Because the supply is virtually infinite, funding for the DAO may continue indefinitely—as long as Tiles are sold.`;
+
+/*
+    OpenSea Tile Profile Picture
+    https://gateway.pinata.cloud/ipfs/QmR6F5AoJCPTtmwqvs6LRgg7pMwMj8sFNQGGCFrz36FaHS
+
+    OpenSea Tile Banner
+    https://gateway.pinata.cloud/ipfs/QmbFo89d3bg7Wj9RMs77pm8aX6eRB6t78HoZHfmLjCwKLr
+*/
+
 const project_image_gif = 'ipfs://QmR6F5AoJCPTtmwqvs6LRgg7pMwMj8sFNQGGCFrz36FaHS';
-const project_base_uri = `ipfs://QmQ27q66UqqYp16b1yn5k72txtyy9m1CBGbw7a7shuLFBZ/`;
+const project_base_uri = `ipfs://CID/`;
 const provenance = ``;
 const project_max_tokens = 0;
 const project_start_sale = 0;
