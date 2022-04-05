@@ -12,9 +12,7 @@ import "./Tile.sol";
 
 pragma solidity ^0.8.6;
 
-/*
-    contract TilesSvg is Tile, TilePart, StringHelpers, JuiceboxProject, ERC721Enumerable  {
-*/
+// contract TilesSvg is Tile, TilePart, StringHelpers, JuiceboxProject, ERC721Enumerable, Ownable  {
 
 contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
     using SafeMath for uint256;
@@ -24,6 +22,7 @@ contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
     bool public saleIsActive = false;    
     uint256 public mintedReservesLimit = 1000;
     uint256 public mintedReservesCount = 0;    
+    string public OPENSEA_STORE_METADATA = 'ipfs://CID';
 
     mapping(address => uint256) public idOfAddress;
     mapping(uint256 => address) public tileAddressOf;
@@ -60,19 +59,6 @@ contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
         [yellow, black, red]
     ];
 
-    constructor() ERC721("Tiles", "TILES") {  }
-
-    /*
-    constructor(
-        uint256 _projectID,
-        ITerminalDirectory _terminalDirectory,
-        string memory _baseURI
-    ) JuiceboxProject(_projectID, _terminalDirectory) ERC721("Tiles", "TILES") {
-        baseURI = _baseURI;
-    }
-
-    */
-
     function bytesToChars(address _address)
         private
         pure
@@ -108,7 +94,41 @@ contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
         string memory color = sectorColorsFromInt16(chars[i + 1][0], r);
         return (svgs[chars[i + 1][r + 1]], color);
     }
+
+    constructor() ERC721("Tiles", "TILES") {  }
+
+    /*
+    constructor(
+        uint256 _projectID,
+        ITerminalDirectory _terminalDirectory,
+        string memory _baseURI
+    ) JuiceboxProject(_projectID, _terminalDirectory) ERC721("Tiles", "TILES") {
+        baseURI = _baseURI;
+    }
+
+    */
     
+    // Get IDs for all tokens owned by `_owner`
+    function tokensOfOwner(address _owner)
+        external
+        view
+        returns (uint256[] memory)
+    {
+        uint256 tokenCount = balanceOf(_owner);
+        if (tokenCount == 0) {
+            // Return an empty array
+            return new uint256[](0);
+        } else {
+            uint256[] memory result = new uint256[](tokenCount);
+            uint256 index;
+            for (index = 0; index < tokenCount; index++) {
+                result[index] = tokenOfOwnerByIndex(_owner, index);
+            }
+            return result;
+        }
+    }
+
+
     function calculatePrice() public view returns (uint256) {
         require(saleIsActive == true, "Sale hasn't started");
         /*
@@ -142,16 +162,46 @@ contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
         return 10000000000000000; // 1 - 200 : 0.01 ETH
     }
 
-    function mintTile(address _tileAddress) external payable returns (uint256) {
-        /*
+    /*
+        If a wallet owner's matching Tile has been minted already, 
+            they may collect it from its current owner by paying the owner the current market price.
+    */
+    function collectTile() external payable {
+        uint256 tokenId = idOfAddress[msg.sender];
+        require(tokenId != 0, "Tile for sender address has not been minted");
+        address owner = ownerOf(tokenId);
+        require(owner != msg.sender, "Sender already owns this Tile");
         require(
             msg.value >= calculatePrice(),
             "Ether value sent is below the price"
         );
-        */
+        require(payable(owner).send(msg.value));
+        _transfer(owner, msg.sender, tokenId);
+    }
 
-        // Take fee into TileDAO Juicebox treasury
-        /*
+    function mintReserveTile(address to, address _tileAddress)
+        external
+        onlyOwner
+        returns (uint256)
+    {
+        require(
+            mintedReservesCount < mintedReservesLimit,
+            "Reserves limit exceeded"
+        );
+
+        mintedReservesCount = mintedReservesCount + 1;
+        return _mintTile(to, _tileAddress);
+    }
+
+
+    function mintTile(address _tileAddress) external payable returns (uint256) {        
+        // Take fee into TileDAO Juicebox treasury  
+        /*      
+        require(
+            msg.value >= calculatePrice(),
+            "Ether value sent is below the price"
+        );        
+
         _takeFee(
             msg.value,
             msg.sender,
@@ -163,26 +213,27 @@ contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
             ),
             false
         );
-        */
+        */        
         return _mintTile(msg.sender, _tileAddress);
     }
 
     /*
-        Minting a Tile just means to store the owner's address, tokenId, and a mapping of the _tileAddress
+        Minting a Tile just means to store the owner's address, 
+            tokenId, and a mapping of the _tileAddress
+            private
     */
-    function _mintTile(address to, address _tileAddress)
-        private
-        returns (uint256)
+    function _mintTile(address to, address _tileAddress) private returns (uint256)
     {
         require(
             idOfAddress[_tileAddress] == 0,
             "Tile already minted for address"
         );
         
-        uint256 tokenId = totalSupply() + 1;
+        uint256 tokenId = totalSupply() + 1;        
         _safeMint(to, tokenId);        
         idOfAddress[_tileAddress] = tokenId;
         tileAddressOf[tokenId] = _tileAddress;
+        _tokenUri(_tileAddress);
         emit Mint(to, _tileAddress);
         return tokenId;
     }
@@ -201,7 +252,6 @@ contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
         return _tokenUri(address(tileAddressOf[tokenId]));            
     }
 
-    // convert to private after testing
     function _tokenUri(address addr) public view returns (string memory) {
         string memory str = head;
         uint16[4][10] memory addressSegments;
@@ -343,18 +393,4 @@ contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable  {
         saleIsActive = false;
     }
     
-    function mintReserveTile(address to, address _tileAddress)
-        external
-        onlyOwner
-        returns (uint256)
-    {
-        require(
-            mintedReservesCount < mintedReservesLimit,
-            "Reserves limit exceeded"
-        );
-
-        mintedReservesCount = mintedReservesCount + 1;
-        return _mintTile(to, _tileAddress);
-    }
-
 }

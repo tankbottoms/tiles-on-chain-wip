@@ -34,5 +34,5 @@ contract Tile {
         );
     string foot = "</g></g></svg>";
     uint16 sectorSize = 100;
-
+    
 }
