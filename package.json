@@ -28,7 +28,7 @@
         "deploy:alchemy": "npx hardhat run scripts/deploy.ts --network alchemy",
         "verify": "echo \"Enter Ropsten contract address=>\" && read && npx hardhat verify --network ropsten $REPLY",
         "git": "git add . && echo \"Enter your commit message =>\" && read && git commit -m \"$REPLY :construction_worker: :octocat: :four_leaf_clover: :pray:\" && git push origin main",
-        "gen:merkle-root": "ts-node scripts/data/data-parser.ts && ts-node merkle-distributor/index.ts -i scripts/data/merkle-input.json -o scripts/data/merkle-root.json && rm -f scripts/data/merkle-input.json"
+        "gen:merkle-root": "ts-node scripts/data/crawl.ts && ts-node merkle-distributor/index.ts -i scripts/data/merkle-input.json -o scripts/data/merkle-root.json && rm -f scripts/data/merkle-input.json"
     },
     "devDependencies": {
         "@alch/alchemy-web3": "^1.2.4",
