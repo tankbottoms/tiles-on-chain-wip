@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { ethers } from 'hardhat';
+import { ethers, network } from 'hardhat';
 import { BigNumber, Contract, ContractFactory, Transaction } from 'ethers';
 import { config as dotenvConfig } from 'dotenv';
 import { resolve } from 'path';
@@ -27,6 +27,13 @@ async function main(): Promise<void> {
 
     const { deployTransaction } = deployed;
     const { hash, from, to, gasPrice, gasLimit: gasLimitUsed, data, chainId, confirmations } = deployTransaction;
+
+    fs.writeFileSync(
+        path.resolve(__dirname, `../deployments/${network.name}/TilesSvg.sol.json`),
+        JSON.stringify({
+            address: deployed.address,
+        })
+    );
 
     console.log(`transaction id:${hash}`);
     console.log(`from:${from}, to:${to} - (${confirmations} confirmations)`);
