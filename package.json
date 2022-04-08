@@ -79,7 +79,7 @@
         "typescript": "~4.2.4"
     },
     "dependencies": {
-        "@jbox/sol": "^1.0.2",
+        "@jbx-protocol/contracts-v2": "^0.0.21",
         "@openzeppelin/contracts": "^4.5.0",
         "commander": "^9.1.0",
         "cross-fetch": "^3.1.5",

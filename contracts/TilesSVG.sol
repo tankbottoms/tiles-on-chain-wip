@@ -3,7 +3,7 @@ import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
 import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
-import '@jbox/sol/contracts/abstract/JuiceboxProject.sol';
+import '@jbx-protocol/contracts-v2/contracts/JBETHERC20ProjectPayer.sol';
 import {Strings} from '@openzeppelin/contracts/utils/Strings.sol';
 
 import './StringHelpers.sol';
@@ -13,7 +13,11 @@ import './Base64.sol';
 
 pragma solidity ^0.8.6;
 
-// contract TilesSvg is Tile, TilePart, StringHelpers, JuiceboxProject, ERC721Enumerable, Ownable  {
+/*
+    https://info.juicebox.money/docs/build/project-payer/
+    
+    contract TilesSvg is Tile, TilePart, StringHelpers, JBProjectPayer, ERC721Enumerable, Ownable {
+*/
 
 contract TilesSvg is Tile, TilePart, StringHelpers, ERC721Enumerable, Ownable {
     using SafeMath for uint256;
