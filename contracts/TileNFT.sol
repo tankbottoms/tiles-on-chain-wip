@@ -126,7 +126,7 @@ contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard,
       @notice Validate that the caller is in the minter list.
      */
     modifier onlyMinter(address _account) {
-        if (!minters[_account]) { revert PRIVILEDGED_OPERATION(); }
+        if (_account != owner() && !minters[_account]) { revert PRIVILEDGED_OPERATION(); }
         _;
     }
 }
