@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
-import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+import {Strings} from '@openzeppelin/contracts/utils/Strings.sol';
 
 pragma solidity ^0.8.6;
 
-contract StringHelpers {    
-
+contract StringHelpers {
     function toAsciiString(address x) internal pure returns (string memory) {
         bytes memory s = new bytes(40);
         for (uint256 i = 0; i < 20; i++) {
@@ -30,12 +29,8 @@ contract StringHelpers {
         uint256 c = _a / _b;
         uint256 d = (_a * (10**n)) / _b;
 
-        bytes memory _cBytes = abi.encodePacked(
-            c > 0 ? Strings.toString(c) : ""
-        );
-        bytes memory _dBytes = abi.encodePacked(
-            d > 0 ? Strings.toString(d) : "0"
-        );
+        bytes memory _cBytes = abi.encodePacked(c > 0 ? Strings.toString(c) : '');
+        bytes memory _dBytes = abi.encodePacked(d > 0 ? Strings.toString(d) : '0');
         bytes memory _finalBytes = new bytes(_cBytes.length + 1 + n);
 
         for (uint256 i = 0; i <= _cBytes.length; i++) {
@@ -46,11 +41,7 @@ contract StringHelpers {
             }
         }
 
-        for (
-            uint256 i = 0;
-            i < (_dBytes.length > n ? n : _dBytes.length);
-            i++
-        ) {
+        for (uint256 i = 0; i < (_dBytes.length > n ? n : _dBytes.length); i++) {
             _finalBytes[i + _cBytes.length + 1] = _dBytes[_cBytes.length + i];
         }
         return string(_finalBytes);
@@ -71,23 +62,15 @@ contract StringHelpers {
                     break;
                 }
                 if (j == _fromBytes.length - 1) {
-                    bytes memory _newStrBytes = new bytes(
-                        _strBytes.length - _fromBytes.length + _toBytes.length
-                    );
+                    bytes memory _newStrBytes = new bytes(_strBytes.length - _fromBytes.length + _toBytes.length);
                     for (uint256 k = 0; k < i; k++) {
                         _newStrBytes[k] = _strBytes[k];
                     }
                     for (uint256 k = 0; k < _toBytes.length; k++) {
                         _newStrBytes[i + k] = _toBytes[k];
                     }
-                    for (
-                        uint256 k = i + _fromBytes.length;
-                        k < _strBytes.length;
-                        k++
-                    ) {
-                        _newStrBytes[
-                            k - _fromBytes.length + _toBytes.length
-                        ] = _strBytes[k];
+                    for (uint256 k = i + _fromBytes.length; k < _strBytes.length; k++) {
+                        _newStrBytes[k - _fromBytes.length + _toBytes.length] = _strBytes[k];
                     }
                     return string(_newStrBytes);
                 }
@@ -98,20 +81,13 @@ contract StringHelpers {
         return _str;
     }
 
-    function stringStartsWith(string memory _str, string memory _prefix)
-        public
-        pure
-        returns (bool)
-    {
+    function stringStartsWith(string memory _str, string memory _prefix) public pure returns (bool) {
         bytes memory _strBytes = bytes(_str);
         bytes memory _prefixBytes = bytes(_prefix);
         bytes memory _tempString = new bytes(_prefixBytes.length);
         for (uint32 i = 0; i < _prefixBytes.length; i++) {
             _tempString[i] = _strBytes[i];
         }
-        return
-            keccak256(abi.encodePacked(_prefixBytes)) ==
-            keccak256(abi.encodePacked(_tempString));
+        return keccak256(abi.encodePacked(_prefixBytes)) == keccak256(abi.encodePacked(_tempString));
     }
-
 }
