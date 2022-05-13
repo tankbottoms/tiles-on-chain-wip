@@ -81,6 +81,7 @@
     "dependencies": {
         "@jbx-protocol/contracts-v2": "^0.0.21",
         "@openzeppelin/contracts": "^4.5.0",
+        "@rari-capital/solmate": "^6.2.0",
         "commander": "^9.1.0",
         "cross-fetch": "^3.1.5",
         "fetch": "^1.1.0",
