@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 
+import '@jbx-protocol/contracts-v2/contracts/interfaces/IJBProjectPayer.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
@@ -21,13 +22,20 @@ contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard,
   IPriceResolver private priceResolver;
   ITokenUriResolver private tokenUriResolver;
   mapping(address => bool) private minters;
-  address payable private treasury;
+  IJBProjectPayer treasury;
 
   //*********************************************************************//
   // -------------------------- constructor ---------------------------- //
   //*********************************************************************//
   /**
-      @notice 
+    @notice 
+
+    @param _name Token name.
+    @param _symbol Token symbol.
+    @param _baseUri Token base URI if URI resolver is not present.
+    @param _priceResolver Price resolver.
+    @param _tokenUriResolver Token URI resolver.
+    @param _treasury Jukebox.money project payment interface.
    */
   constructor(
     string memory _name,
@@ -35,7 +43,7 @@ contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard,
     string memory _baseUri,
     IPriceResolver _priceResolver,
     ITokenUriResolver _tokenUriResolver,
-    address payable _treasury
+    IJBProjectPayer _treasury
   ) ERC721Enumerable(_name, _symbol) {
     baseUri = _baseUri;
     priceResolver = _priceResolver;
@@ -71,7 +79,7 @@ contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard,
     }
 
     if (address(treasury) != address(0)) {
-      treasury.transfer(msg.value);
+      payable(address(treasury)).transfer(msg.value);
     }
 
     mintedTokenId = _mint(msg.sender);
@@ -95,7 +103,7 @@ contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard,
     }
 
     if (address(treasury) != address(0)) {
-      treasury.transfer(msg.value);
+      payable(address(treasury)).transfer(msg.value);
     }
 
     mintedTokenId = _mint(msg.sender);
@@ -115,7 +123,7 @@ contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard,
     returns (uint256 mintedTokenId)
   {
     if (msg.value > 0 && address(treasury) != address(0)) {
-      treasury.transfer(msg.value);
+      payable(address(treasury)).transfer(msg.value);
     }
 
     mintedTokenId = _mint(_account);
@@ -145,8 +153,8 @@ contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard,
   /**
       @notice Changes the treasury address.
      */
-  function setTreasury(address payable _treasury) external override onlyOwner {
-    if (_treasury == address(0)) {
+  function setTreasury(IJBProjectPayer _treasury) external override onlyOwner {
+    if (address(_treasury) == address(0)) {
       revert INVALID_ADDRESS();
     }
 

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 
+import '@jbx-protocol/contracts-v2/contracts/interfaces/IJBProjectPayer.sol';
+
 import './IPriceResolver.sol';
 
 /**
@@ -19,7 +21,7 @@ interface ITileNFT {
 
   function setPriceResolver(IPriceResolver) external;
 
-  function setTreasury(address payable) external;
+  function setTreasury(IJBProjectPayer) external;
 
   function transferBalance(address payable, uint256) external;
 }
