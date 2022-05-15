@@ -1,0 +1,11 @@
+[default]
+libs = ['lib']
+out = 'out'
+remappings = [
+    '@openzeppelin=node_modules/@openzeppelin/',
+    '@rari-capital=node_modules/@rari-capital/'
+]
+src = 'contracts'
+test = 'forge-test'
+
+# See more config options https://github.com/foundry-rs/foundry/tree/master/config

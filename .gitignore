@@ -11,9 +11,9 @@ build/
 cache/
 coverage/
 dist/
-lib/
 node_modules/
 typechain/
+out/
 
 # files
 *.env
