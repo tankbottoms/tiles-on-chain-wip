@@ -67,8 +67,8 @@
         "hardhat-gas-reporter": "^1.0.4",
         "lint-staged": "^11.0.0",
         "mocha": "^8.4.0",
-        "prettier": "^2.3.0",
-        "prettier-plugin-solidity": "^1.0.0-beta.11",
+        "prettier": "^2.4.0",
+        "prettier-plugin-solidity": "^1.0.0-beta.19",
         "shelljs": "^0.8.4",
         "solhint": "^3.3.6",
         "solhint-plugin-prettier": "^0.0.5",
@@ -79,8 +79,8 @@
         "typescript": "~4.2.4"
     },
     "dependencies": {
-        "@jbx-protocol/contracts-v2": "^0.0.21",
-        "@openzeppelin/contracts": "^4.5.0",
+        "@jbx-protocol/contracts-v2": "^4.0.0",
+        "@openzeppelin/contracts": "^4.6.0",
         "@rari-capital/solmate": "^6.2.0",
         "commander": "^9.1.0",
         "cross-fetch": "^3.1.5",

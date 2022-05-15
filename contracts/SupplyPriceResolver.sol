@@ -7,17 +7,20 @@ import './IPriceResolver.sol';
   @notice A price resolver that derives the price of the token being minted based on total number of tokens already minted.
  */
 contract SupplyPriceResolver is IPriceResolver {
-    error UNSUPPORTED_OPERATION();
+  error UNSUPPORTED_OPERATION();
 
-    enum PriceFunction { LINEAR, EXP }
+  enum PriceFunction {
+    LINEAR,
+    EXP
+  }
 
-    uint256 private immutable basePrice;
-    uint256 private immutable multiplier;
-    uint256 private immutable tierSize;
-    uint256 private immutable priceCap;
-    PriceFunction private immutable priceFunction;
+  uint256 private immutable basePrice;
+  uint256 private immutable multiplier;
+  uint256 private immutable tierSize;
+  uint256 private immutable priceCap;
+  PriceFunction private immutable priceFunction;
 
-    /**
+  /**
       @notice Creates a resolver that calculates a tiered price based on current token supply. Price will be either multipied by multiplier * (currentSupply % tierSize) or multiplier ** (currentSupply % tierSize).
       @param _basePrice Minimum price to return.
       @param _multiplier Price multiplyer.
@@ -25,62 +28,73 @@ contract SupplyPriceResolver is IPriceResolver {
       @param _priceCap Maximum price to return
       @param _priceFunction Price multiplier application, linear or exponential.
      */
-    constructor(uint256 _basePrice, uint256 _multiplier, uint256 _tierSize, uint256 _priceCap, PriceFunction _priceFunction) {
-        basePrice = _basePrice;
-        multiplier = _multiplier;
-        tierSize = _tierSize;
-        priceCap = _priceCap;
-        priceFunction = _priceFunction;
-    }
+  constructor(
+    uint256 _basePrice,
+    uint256 _multiplier,
+    uint256 _tierSize,
+    uint256 _priceCap,
+    PriceFunction _priceFunction
+  ) {
+    basePrice = _basePrice;
+    multiplier = _multiplier;
+    tierSize = _tierSize;
+    priceCap = _priceCap;
+    priceFunction = _priceFunction;
+  }
 
-    /**
+  /**
       @notice Unsupported operation.
      */
-    function getPrice() public virtual override returns (uint256) {
-        revert UNSUPPORTED_OPERATION();
-    }
+  function getPrice() public virtual override returns (uint256) {
+    revert UNSUPPORTED_OPERATION();
+  }
 
-    /**
+  /**
       @notice Unsupported operation.
      */
-    function getPriceFor(address) public virtual override returns (uint256) {
-        revert UNSUPPORTED_OPERATION();
-    }
+  function getPriceFor(address) public virtual override returns (uint256) {
+    revert UNSUPPORTED_OPERATION();
+  }
 
-    /**
+  /**
       @notice Unsupported operation.
      */
-    function getPriceOf(uint256) public virtual override returns (uint256) {
-        revert UNSUPPORTED_OPERATION();
-    }
+  function getPriceOf(uint256) public virtual override returns (uint256) {
+    revert UNSUPPORTED_OPERATION();
+  }
 
-    /**
+  /**
       @notice Returns the items price based on current supply.
       @param (address) Ignored address.
       @param (uint256) Ignored token id.
       @param params Item at index 0 is expected to be an encoded uint256 representing current supply.
      */
-    function getPriceWithParams(address, uint256, bytes calldata params) public virtual override returns (uint256 price) {
-        uint256 currentSupply = bytesToUint(params);
+  function getPriceWithParams(
+    address,
+    uint256,
+    bytes calldata params
+  ) public virtual override returns (uint256 price) {
+    uint256 currentSupply = bytesToUint(params);
 
-        if (priceFunction == PriceFunction.LINEAR) {
-            price = multiplier * (currentSupply / tierSize) * basePrice;
-        } else { // PriceFunction.EXP
-            price =  multiplier ** (currentSupply / tierSize) * basePrice;
-        }
-
-        if (price > priceCap) {
-            price = priceCap;
-        }
-
-        if (price == 0) {
-            price = basePrice;
-        }
+    if (priceFunction == PriceFunction.LINEAR) {
+      price = multiplier * (currentSupply / tierSize) * basePrice;
+    } else {
+      // PriceFunction.EXP
+      price = multiplier**(currentSupply / tierSize) * basePrice;
     }
 
-    function bytesToUint(bytes memory b) private pure returns (uint256 number) {
-        for (uint256 i = 0; i < b.length; i++) {
-            number = number + uint256(uint8(b[i])) * (2**(8 * (b.length - (i + 1))));
-        }
+    if (price > priceCap) {
+      price = priceCap;
     }
+
+    if (price == 0) {
+      price = basePrice;
+    }
+  }
+
+  function bytesToUint(bytes memory b) private pure returns (uint256 number) {
+    for (uint256 i = 0; i < b.length; i++) {
+      number = number + uint256(uint8(b[i])) * (2**(8 * (b.length - (i + 1))));
+    }
+  }
 }
