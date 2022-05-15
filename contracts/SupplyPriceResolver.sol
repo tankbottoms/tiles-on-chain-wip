@@ -6,7 +6,7 @@ import './IPriceResolver.sol';
 /**
   @notice A price resolver that derives the price of the token being minted based on total number of tokens already minted.
  */
-contract SupplyPriceRosolver is IPriceResolver {
+contract SupplyPriceResolver is IPriceResolver {
     error UNSUPPORTED_OPERATION();
 
     enum PriceFunction { LINEAR, EXP }
@@ -60,19 +60,21 @@ contract SupplyPriceRosolver is IPriceResolver {
       @param (uint256) Ignored token id.
       @param params Item at index 0 is expected to be an encoded uint256 representing current supply.
      */
-    function getPriceWithParams(address, uint256, bytes[] calldata params) public virtual override returns (uint256 price) {
-        uint256 currentSupply = bytesToUint(params[0]);
-
-        if (currentSupply == 0) { return basePrice; }
+    function getPriceWithParams(address, uint256, bytes calldata params) public virtual override returns (uint256 price) {
+        uint256 currentSupply = bytesToUint(params);
 
         if (priceFunction == PriceFunction.LINEAR) {
-            price = multiplier * (currentSupply % tierSize) * basePrice;
+            price = multiplier * (currentSupply / tierSize) * basePrice;
         } else { // PriceFunction.EXP
-            price =  multiplier ** (currentSupply % tierSize) * basePrice;
+            price =  multiplier ** (currentSupply / tierSize) * basePrice;
         }
 
         if (price > priceCap) {
             price = priceCap;
+        }
+
+        if (price == 0) {
+            price = basePrice;
         }
     }
 

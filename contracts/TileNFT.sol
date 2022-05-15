@@ -30,7 +30,8 @@ contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard,
 
     /** public views **/
 
-    function tokenURI(uint256 id) public view override returns (string memory uri) {
+    function tokenURI(uint256 tokenId) public pure override returns (string memory uri) {
+        tokenId;
         uri = '';
     }
 
@@ -39,25 +40,25 @@ contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard,
     /**
       @notice Allows minting by anyone at the correct price.
      */
-    function mint() external payable override nonReentrant returns (uint256) {
+    function mint() external payable override nonReentrant returns (uint256 mintedTokenId) {
         if (address(priceResolver) == address(0)) { revert UNSUPPORTED_OPERATION(); }
         if (msg.value != priceResolver.getPrice()) { revert INCORRECT_PRICE(); }
 
         if (address(treasury) != address(0)) { treasury.transfer(msg.value); }
 
-        _mint(msg.sender);
+        mintedTokenId = _mint(msg.sender);
     }
 
     /**
       @notice Allows minting by anyone in the merkle root of the registered price resolver.
      */
-    function merkleMint(uint256 tokenId, bytes[] calldata proof) external payable override nonReentrant returns (uint256) {
+    function merkleMint(uint256 tokenId, bytes calldata proof) external payable override nonReentrant returns (uint256 mintedTokenId) {
         if (address(priceResolver) == address(0)) { revert UNSUPPORTED_OPERATION(); }
         if (msg.value != priceResolver.getPriceWithParams(msg.sender, tokenId, proof)) { revert INCORRECT_PRICE(); }
 
         if (address(treasury) != address(0)) { treasury.transfer(msg.value); }
 
-        _mint(msg.sender);
+        mintedTokenId = _mint(msg.sender);
     }
 
     /** priviledged functions **/
@@ -65,10 +66,10 @@ contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard,
     /**
       @notice Allows direct mint by priviledged accounts bypassing price checks.
      */
-    function superMint(address _account) external payable override nonReentrant onlyMinter(msg.sender) returns (uint256) {
+    function superMint(address _account) external payable override nonReentrant onlyMinter(msg.sender) returns (uint256 mintedTokenId) {
         if (msg.value > 0 && address(treasury) != address(0)) { treasury.transfer(msg.value); }
 
-        _mint(_account);
+        mintedTokenId = _mint(_account);
     }
 
     /**

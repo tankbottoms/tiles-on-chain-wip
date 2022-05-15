@@ -23,5 +23,5 @@ interface IPriceResolver {
     /**
       @notice A function to calculate price based on caller address, token id being minted and some arbitrary collection of parameters, for example Merkle tree parts.
      */
-    function getPriceWithParams(address, uint256, bytes[] calldata) external returns (uint256);
+    function getPriceWithParams(address, uint256, bytes calldata) external returns (uint256);
 }

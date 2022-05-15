@@ -9,7 +9,7 @@ import './IPriceResolver.sol';
 interface ITileNFT {
     function mint() external payable returns (uint256);
 
-    function merkleMint(uint256, bytes[] calldata) external payable returns (uint256);
+    function merkleMint(uint256, bytes calldata) external payable returns (uint256);
 
     function superMint(address) external payable returns (uint256);
 

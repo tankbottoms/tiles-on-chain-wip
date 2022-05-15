@@ -60,13 +60,9 @@ contract MerkleRootPriceResolver is IPriceResolver {
       @param tokenId Token id to validate.
       @param params Item at index 0 is expected to be the Merkle tree proof.
      */
-    function getPriceWithParams(
-        address account,
-        uint256 tokenId,
-        bytes[] calldata params
-    ) public virtual override returns (uint256 price) {
+    function getPriceWithParams(address account, uint256 tokenId, bytes calldata params) public virtual override returns (uint256 price) {
         bytes32 node = keccak256(abi.encodePacked(account, tokenId));
-        bytes32[] memory proof = bytesToBytes32Arr(params[0], 0);
+        bytes32[] memory proof = bytesToBytes32Arr(params, 0);
         if (!MerkleProof.verify(proof, merkleRoot, node)) {
             revert INVALID_PROOF();
         }
