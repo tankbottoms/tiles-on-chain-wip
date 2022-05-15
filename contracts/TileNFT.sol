@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import './IPriceResolver.sol';
 import './ITileNFT.sol';
+import './ITokenURIResolver.sol';
 import './AbstractTileNFT.sol';
 import './ERC721Enumerable.sol';
 
@@ -16,23 +17,30 @@ contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard,
     error INVALID_ADDRESS();
     error INVALID_AMOUNT();
 
+    string public baseUri;
     IPriceResolver private priceResolver;
+    ITokenUriResolver private tokenUriResolver;
     mapping(address => bool) private minters;
     address payable private treasury;
 
     /**
       @notice 
      */
-    constructor(string memory _name, string memory _symbol, IPriceResolver _priceResolver, address payable _treasury) ERC721Enumerable(_name, _symbol) {
+    constructor(string memory _name, string memory _symbol, string memory _baseUri, IPriceResolver _priceResolver, ITokenUriResolver _tokenUriResolver, address payable _treasury) ERC721Enumerable(_name, _symbol) {
+        baseUri = _baseUri;
         priceResolver = _priceResolver;
+        tokenUriResolver = _tokenUriResolver;
         treasury = _treasury;
     }
 
     /** public views **/
 
-    function tokenURI(uint256 tokenId) public pure override returns (string memory uri) {
-        tokenId;
-        uri = '';
+    function tokenURI(uint256 tokenId) public view override returns (string memory uri) {
+        if (address(tokenUriResolver) != address(0)) {
+            uri = tokenUriResolver.tokenUri(tokenId);
+        }
+
+        uri = baseUri;
     }
 
     /** public functions **/
