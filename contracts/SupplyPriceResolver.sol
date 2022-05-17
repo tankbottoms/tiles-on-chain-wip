@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 
-import './IPriceResolver.sol';
+import './interfaces/IPriceResolver.sol';
 
 /**
   @notice A price resolver that derives the price of the token being minted based on total number of tokens already minted.
@@ -21,13 +21,13 @@ contract SupplyPriceResolver is IPriceResolver {
   PriceFunction private immutable priceFunction;
 
   /**
-      @notice Creates a resolver that calculates a tiered price based on current token supply. Price will be either multipied by multiplier * (currentSupply % tierSize) or multiplier ** (currentSupply % tierSize).
-      @param _basePrice Minimum price to return.
-      @param _multiplier Price multiplyer.
-      @param _tierSize Price tier size.
-      @param _priceCap Maximum price to return
-      @param _priceFunction Price multiplier application, linear or exponential.
-     */
+    @notice Creates a resolver that calculates a tiered price based on current token supply. Price will be either multipied by multiplier * (currentSupply % tierSize) or multiplier ** (currentSupply % tierSize).
+    @param _basePrice Minimum price to return.
+    @param _multiplier Price multiplyer.
+    @param _tierSize Price tier size.
+    @param _priceCap Maximum price to return
+    @param _priceFunction Price multiplier application, linear or exponential.
+    */
   constructor(
     uint256 _basePrice,
     uint256 _multiplier,
@@ -43,32 +43,32 @@ contract SupplyPriceResolver is IPriceResolver {
   }
 
   /**
-      @notice Unsupported operation.
-     */
+    @notice Unsupported operation.
+    */
   function getPrice() public view virtual override returns (uint256) {
     revert UNSUPPORTED_OPERATION();
   }
 
   /**
-      @notice Unsupported operation.
-     */
+    @notice Unsupported operation.
+    */
   function getPriceFor(address) public view virtual override returns (uint256) {
     revert UNSUPPORTED_OPERATION();
   }
 
   /**
-      @notice Unsupported operation.
-     */
+    @notice Unsupported operation.
+    */
   function getPriceOf(uint256) public view virtual override returns (uint256) {
     revert UNSUPPORTED_OPERATION();
   }
 
   /**
-      @notice Returns the items price based on current supply.
-      @param (address) Ignored address.
-      @param (uint256) Ignored token id.
-      @param params Item at index 0 is expected to be an encoded uint256 representing current supply.
-     */
+    @notice Returns the items price based on current supply.
+    @param (address) Ignored address.
+    @param (uint256) Ignored token id.
+    @param params Item at index 0 is expected to be an encoded uint256 representing current supply.
+    */
   function getPriceWithParams(
     address,
     uint256,

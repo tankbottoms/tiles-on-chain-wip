@@ -3,7 +3,7 @@ pragma solidity ^0.8.6;
 
 import '@openzeppelin/contracts/utils/cryptography/MerkleProof.sol';
 
-import './IPriceResolver.sol';
+import './interfaces/IPriceResolver.sol';
 
 /**
   @notice A Merkle tree-based price resolver with optional default price.

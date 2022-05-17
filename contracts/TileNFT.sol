@@ -5,24 +5,32 @@ import '@jbx-protocol/contracts-v2/contracts/interfaces/IJBProjectPayer.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
-import './IPriceResolver.sol';
-import './ITileNFT.sol';
-import './ITokenURIResolver.sol';
-import './AbstractTileNFT.sol';
-import './ERC721Enumerable.sol';
+import './interfaces/IPriceResolver.sol';
+import './interfaces/ITileNFT.sol';
+import './interfaces/ITileContentProvider.sol';
+import './components/ERC721Enumerable.sol';
 
-contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
+contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
   error INCORRECT_PRICE();
   error UNSUPPORTED_OPERATION();
   error PRIVILEDGED_OPERATION();
   error INVALID_ADDRESS();
+  error INVALID_TOKEN();
   error INVALID_AMOUNT();
 
   string public baseUri;
   IPriceResolver private priceResolver;
-  ITokenUriResolver private tokenUriResolver;
+  ITileContentProvider private tokenUriResolver;
   mapping(address => bool) private minters;
-  IJBProjectPayer treasury;
+  IJBProjectPayer private treasury;
+
+  /**
+    @notice
+    URI containing Opensea-style metadata.
+  */
+  string private _contractUri;
+
+  mapping(address => uint256) public idForAddress;
 
   //*********************************************************************//
   // -------------------------- constructor ---------------------------- //
@@ -42,13 +50,17 @@ contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard,
     string memory _symbol,
     string memory _baseUri,
     IPriceResolver _priceResolver,
-    ITokenUriResolver _tokenUriResolver,
-    IJBProjectPayer _treasury
+    ITileContentProvider _tokenUriResolver,
+    IJBProjectPayer _treasury,
+    string memory _metadataUri
   ) ERC721Enumerable(_name, _symbol) {
     baseUri = _baseUri;
     priceResolver = _priceResolver;
     tokenUriResolver = _tokenUriResolver;
     treasury = _treasury;
+    _contractUri = _metadataUri;
+
+    _tokenUriResolver.setParent(IERC721(address(this)));
   }
 
   //*********************************************************************//
@@ -63,6 +75,10 @@ contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard,
     uri = baseUri;
   }
 
+  function contractURI() public view override returns (string memory contractUri) {
+    contractUri = _contractUri;
+  }
+
   //*********************************************************************//
   // ---------------------- external transactions ---------------------- //
   //*********************************************************************//
@@ -74,6 +90,7 @@ contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard,
     if (address(priceResolver) == address(0)) {
       revert UNSUPPORTED_OPERATION();
     }
+
     if (msg.value != priceResolver.getPrice()) {
       revert INCORRECT_PRICE();
     }
@@ -86,8 +103,8 @@ contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard,
   }
 
   /**
-      @notice Allows minting by anyone in the merkle root of the registered price resolver.
-  */
+    @notice Allows minting by anyone in the merkle root of the registered price resolver.
+    */
   function merkleMint(uint256 tokenId, bytes calldata proof)
     external
     payable
@@ -98,6 +115,7 @@ contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard,
     if (address(priceResolver) == address(0)) {
       revert UNSUPPORTED_OPERATION();
     }
+
     if (msg.value != priceResolver.getPriceWithParams(msg.sender, tokenId, proof)) {
       revert INCORRECT_PRICE();
     }
@@ -109,11 +127,36 @@ contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard,
     mintedTokenId = _mint(msg.sender);
   }
 
-  /** priviledged functions **/
+  /**
+    @notice 
+    */
+  function seize() external payable override returns (uint256 tokenId) {
+    tokenId = idForAddress[msg.sender];
+    if (tokenId == 0) {
+      revert INVALID_TOKEN();
+    }
+
+    address owner = ownerOf[tokenId];
+    if (owner == msg.sender) {
+      revert UNSUPPORTED_OPERATION();
+    }
+
+    if (msg.value != priceResolver.getPrice()) {
+      revert INCORRECT_PRICE();
+    }
+
+    require(payable(owner).send(msg.value));
+
+    _reassign(owner, msg.sender, tokenId);
+  }
+
+  //*********************************************************************//
+  // -------------------- priviledged transactions --------------------- //
+  //*********************************************************************//
 
   /**
-      @notice Allows direct mint by priviledged accounts bypassing price checks.
-     */
+    @notice Allows direct mint by priviledged accounts bypassing price checks.
+    */
   function superMint(address _account)
     external
     payable
@@ -130,15 +173,15 @@ contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard,
   }
 
   /**
-      @notice Adds a priviledged minter account.
-     */
+    @notice Adds a priviledged minter account.
+    */
   function registerMinter(address _minter) external override onlyOwner {
     minters[_minter] = true;
   }
 
   /**
-      @notice Removes a priviledged minter account.
-     */
+    @notice Removes a priviledged minter account.
+    */
   function removeMinter(address _minter) external override onlyOwner {
     minters[_minter] = false;
   }
@@ -151,8 +194,8 @@ contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard,
   }
 
   /**
-      @notice Changes the treasury address.
-     */
+    @notice Changes the treasury address.
+    */
   function setTreasury(IJBProjectPayer _treasury) external override onlyOwner {
     if (address(_treasury) == address(0)) {
       revert INVALID_ADDRESS();
@@ -162,8 +205,8 @@ contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard,
   }
 
   /**
-      @notice Allows owner to tranfer ether balance.
-     */
+    @notice Allows owner to tranfer ether balance.
+    */
   function transferBalance(address payable account, uint256 amount) external override onlyOwner {
     if (account == address(0)) {
       revert INVALID_ADDRESS();
@@ -175,11 +218,13 @@ contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard,
     account.transfer(amount);
   }
 
-  /** private functions **/
+  //*********************************************************************//
+  // ----------------------- private transactions ---------------------- //
+  //*********************************************************************//
 
   /**
-      @notice Mints the ERC721 token, returns minted token id.
-     */
+    @notice Mints the ERC721 token, returns minted token id.
+    */
   function _mint(address account) private returns (uint256 tokenId) {
     tokenId = 0;
 
@@ -187,8 +232,31 @@ contract TileNFT is AbstractTileNFT, ERC721Enumerable, Ownable, ReentrancyGuard,
   }
 
   /**
-      @notice Validate that the caller is in the minter list.
-     */
+    @notice 
+    */
+  function _reassign(
+    address from,
+    address to,
+    uint256 id
+  ) private {
+    require(to != address(0), 'INVALID_RECIPIENT');
+
+    unchecked {
+      balanceOf[from]--;
+
+      balanceOf[to]++;
+    }
+
+    ownerOf[id] = to;
+
+    delete getApproved[id];
+
+    emit Transfer(from, to, id);
+  }
+
+  /**
+    @notice Validate that the caller is in the minter list.
+    */
   modifier onlyMinter(address _account) {
     if (_account != owner() && !minters[_account]) {
       revert PRIVILEDGED_OPERATION();

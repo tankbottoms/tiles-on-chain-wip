@@ -3,7 +3,7 @@ pragma solidity ^0.8.6;
 
 import '@openzeppelin/contracts/utils/Strings.sol';
 
-import './ITokenUriResolver.sol';
+import './interfaces/ITokenUriResolver.sol';
 
 /**
   @notice 

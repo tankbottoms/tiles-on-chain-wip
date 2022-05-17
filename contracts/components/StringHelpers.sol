@@ -3,7 +3,7 @@ import {Strings} from '@openzeppelin/contracts/utils/Strings.sol';
 
 pragma solidity ^0.8.6;
 
-contract StringHelpers {
+library StringHelpers {
   function toAsciiString(address x) internal pure returns (string memory) {
     bytes memory s = new bytes(40);
     for (uint256 i = 0; i < 20; i++) {

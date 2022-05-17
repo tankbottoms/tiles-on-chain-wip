@@ -9,9 +9,13 @@ import './IPriceResolver.sol';
   @notice A price resolver interface meant for NFT contracts to calculate price based on parameters.
  */
 interface ITileNFT {
+  function contractURI() external view returns (string memory);
+
   function mint() external payable returns (uint256);
 
   function merkleMint(uint256, bytes calldata) external payable returns (uint256);
+
+  function seize() external payable returns (uint256);
 
   function superMint(address) external payable returns (uint256);
 
