@@ -45,21 +45,21 @@ contract SupplyPriceResolver is IPriceResolver {
   /**
       @notice Unsupported operation.
      */
-  function getPrice() public virtual override returns (uint256) {
+  function getPrice() public view virtual override returns (uint256) {
     revert UNSUPPORTED_OPERATION();
   }
 
   /**
       @notice Unsupported operation.
      */
-  function getPriceFor(address) public virtual override returns (uint256) {
+  function getPriceFor(address) public view virtual override returns (uint256) {
     revert UNSUPPORTED_OPERATION();
   }
 
   /**
       @notice Unsupported operation.
      */
-  function getPriceOf(uint256) public virtual override returns (uint256) {
+  function getPriceOf(uint256) public view virtual override returns (uint256) {
     revert UNSUPPORTED_OPERATION();
   }
 
@@ -73,7 +73,7 @@ contract SupplyPriceResolver is IPriceResolver {
     address,
     uint256,
     bytes calldata params
-  ) public virtual override returns (uint256 price) {
+  ) public view virtual override returns (uint256 price) {
     uint256 currentSupply = bytesToUint(params);
 
     if (priceFunction == PriceFunction.LINEAR) {
