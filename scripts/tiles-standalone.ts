@@ -289,4 +289,5 @@ require("fs").writeFileSync(
     "./tiles-alone/output.svg",
   str
 );
+
 console.log(address);

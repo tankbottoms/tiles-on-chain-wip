@@ -3,7 +3,7 @@ const { ethers } = require('hardhat');
 async function main() {
     const [deployer] = await ethers.getSigners();
 
-    const factory = await ethers.getContractFactory('TilesSVG');
+    const factory = await ethers.getContractFactory('TilesSvg');
 
     const deployed = await factory.deploy();
     console.log('txnHash:', deployed.deployTransaction.hash);
