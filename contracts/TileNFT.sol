@@ -30,7 +30,15 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
   */
   string private _contractUri;
 
-  mapping(address => uint256) public idForAddress;
+  /**
+    @notice Maps token id to address used to generate content of that NFT. This does not track ownership.
+   */
+  mapping(address => uint256) public override idForAddress;
+
+  /**
+    @notice Maps the address used for NFT content to the token id of that object. This does not track ownership.
+   */
+  mapping(uint256 => address) public override addressForId;
 
   //*********************************************************************//
   // -------------------------- constructor ---------------------------- //
@@ -60,7 +68,7 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
     treasury = _treasury;
     _contractUri = _metadataUri;
 
-    _tokenUriResolver.setParent(IERC721(address(this)));
+    _tokenUriResolver.setParent(ITileNFT(address(this)));
   }
 
   //*********************************************************************//
@@ -70,9 +78,9 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
   function tokenURI(uint256 tokenId) public view override returns (string memory uri) {
     if (address(tokenUriResolver) != address(0)) {
       uri = tokenUriResolver.tokenUri(tokenId);
+    } else {
+      uri = baseUri;
     }
-
-    uri = baseUri;
   }
 
   function contractURI() public view override returns (string memory contractUri) {
@@ -91,7 +99,9 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
       revert UNSUPPORTED_OPERATION();
     }
 
-    if (msg.value != priceResolver.getPrice()) {
+    if (
+      msg.value != priceResolver.getPriceWithParams(msg.sender, 0, abi.encodePacked(totalSupply()))
+    ) {
       revert INCORRECT_PRICE();
     }
 
@@ -99,7 +109,7 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
       payable(address(treasury)).transfer(msg.value);
     }
 
-    mintedTokenId = _mint(msg.sender);
+    mintedTokenId = _mint(msg.sender, msg.sender);
   }
 
   /**
@@ -124,7 +134,7 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
       payable(address(treasury)).transfer(msg.value);
     }
 
-    mintedTokenId = _mint(msg.sender);
+    // mintedTokenId = _mint(msg.sender); // TODO
   }
 
   /**
@@ -169,7 +179,7 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
       payable(address(treasury)).transfer(msg.value);
     }
 
-    mintedTokenId = _mint(_account);
+    mintedTokenId = _mint(_account, _account);
   }
 
   /**
@@ -224,11 +234,24 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
 
   /**
     @notice Mints the ERC721 token, returns minted token id.
-    */
-  function _mint(address account) private returns (uint256 tokenId) {
-    tokenId = 0;
 
-    emit Transfer(address(0), account, tokenId);
+    @param owner Owner of the new token.
+    @param tile Address to generate the tile from.
+    */
+  function _mint(address owner, address tile) private returns (uint256 tokenId) {
+    tokenId = totalSupply() + 1;
+
+    if (idForAddress[tile] != 0) {
+      revert(); // TODO
+    }
+
+    addressForId[tokenId] = tile;
+
+    _mint(owner, tokenId);
+
+    _beforeTokenTransfer(address(0), owner, tokenId);
+
+    emit Transfer(address(0), owner, tokenId);
   }
 
   /**
@@ -237,7 +260,7 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
   function _reassign(
     address from,
     address to,
-    uint256 id
+    uint256 tokenId
   ) private {
     require(to != address(0), 'INVALID_RECIPIENT');
 
@@ -247,11 +270,13 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
       balanceOf[to]++;
     }
 
-    ownerOf[id] = to;
+    ownerOf[tokenId] = to;
 
-    delete getApproved[id];
+    delete getApproved[tokenId];
 
-    emit Transfer(from, to, id);
+    _beforeTokenTransfer(from, to, tokenId);
+
+    emit Transfer(from, to, tokenId);
   }
 
   /**

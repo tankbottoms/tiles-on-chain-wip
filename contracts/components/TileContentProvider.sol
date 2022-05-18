@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 
-import '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 import '@openzeppelin/contracts/utils/Strings.sol';
 
 import './AbstractTileNFTContent.sol';
 import './Base64.sol';
 import './StringHelpers.sol';
 import '../interfaces/ITileContentProvider.sol';
+import '../interfaces/ITileNFT.sol';
 import './Ring.sol';
 
 /**
@@ -40,11 +40,11 @@ contract TileContentProvider is AbstractTileNFTContent, ITileContentProvider {
     [yellow, black, red]
   ];
 
-  IERC721 private parent;
+  ITileNFT private parent;
 
   constructor() {}
 
-  function setParent(IERC721 _parent) public override {
+  function setParent(ITileNFT _parent) public override {
     if (address(parent) != address(0)) {
       revert ALREADY_ASSOCIATED();
     }
@@ -53,7 +53,7 @@ contract TileContentProvider is AbstractTileNFTContent, ITileContentProvider {
   }
 
   function tokenUri(uint256 _tokenId) external view override returns (string memory uri) {
-    uri = getSvgContent(parent.ownerOf(_tokenId));
+    uri = getSvgContent(parent.addressForId(_tokenId));
   }
 
   function getSvgContent(address addr) public view override returns (string memory) {
