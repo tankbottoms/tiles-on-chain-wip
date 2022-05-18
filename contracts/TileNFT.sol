@@ -112,9 +112,34 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
     mintedTokenId = _mint(msg.sender, msg.sender);
   }
 
+  function grab(address tile)
+    external
+    payable
+    override
+    nonReentrant
+    returns (uint256 mintedTokenId)
+  {
+    if (address(priceResolver) == address(0)) {
+      revert UNSUPPORTED_OPERATION();
+    }
+
+    if (
+      msg.value != priceResolver.getPriceWithParams(msg.sender, 0, abi.encodePacked(totalSupply()))
+    ) {
+      revert INCORRECT_PRICE();
+    }
+
+    if (address(treasury) != address(0)) {
+      payable(address(treasury)).transfer(msg.value);
+    }
+
+    mintedTokenId = _mint(msg.sender, tile);
+  }
+
   /**
     @notice Allows minting by anyone in the merkle root of the registered price resolver.
     */
+  // TODO: tokenId here makes no sense
   function merkleMint(uint256 tokenId, bytes calldata proof)
     external
     payable
