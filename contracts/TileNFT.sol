@@ -17,6 +17,7 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
   error INVALID_ADDRESS();
   error INVALID_TOKEN();
   error INVALID_AMOUNT();
+  error ALREADY_MINTED();
 
   string public baseUri;
   IPriceResolver private priceResolver;
@@ -147,18 +148,15 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
     nonReentrant
     returns (uint256 mintedTokenId)
   {
-    if (address(priceResolver) == address(0)) {
-      revert UNSUPPORTED_OPERATION();
-    }
-
-    if (msg.value != priceResolver.getPriceWithParams(msg.sender, tokenId, proof)) {
-      revert INCORRECT_PRICE();
-    }
-
-    if (address(treasury) != address(0)) {
-      payable(address(treasury)).transfer(msg.value);
-    }
-
+    // if (address(priceResolver) == address(0)) {
+    //   revert UNSUPPORTED_OPERATION();
+    // }
+    // if (msg.value != priceResolver.getPriceWithParams(msg.sender, tokenId, proof)) {
+    //   revert INCORRECT_PRICE();
+    // }
+    // if (address(treasury) != address(0)) {
+    //   payable(address(treasury)).transfer(msg.value);
+    // }
     // mintedTokenId = _mint(msg.sender); // TODO
   }
 
@@ -204,10 +202,6 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
     onlyMinter(msg.sender)
     returns (uint256 mintedTokenId)
   {
-    if (msg.value > 0 && address(treasury) != address(0)) {
-      payable(address(treasury)).transfer(msg.value);
-    }
-
     mintedTokenId = _mint(_account, _tile);
   }
 
@@ -236,10 +230,6 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
     @notice Changes the treasury address.
     */
   function setTreasury(IJBProjectPayer _treasury) external override onlyOwner {
-    if (address(_treasury) == address(0)) {
-      revert INVALID_ADDRESS();
-    }
-
     treasury = _treasury;
   }
 
@@ -250,6 +240,7 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
     if (account == address(0)) {
       revert INVALID_ADDRESS();
     }
+
     if (amount == 0 || amount > (payable(address(this))).balance) {
       revert INVALID_AMOUNT();
     }
@@ -271,7 +262,7 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
     tokenId = totalSupply() + 1;
 
     if (idForAddress[tile] != 0) {
-      revert(); // TODO
+      revert ALREADY_MINTED();
     }
 
     addressForId[tokenId] = tile;

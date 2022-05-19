@@ -1,4 +1,3 @@
-import { deploy } from '@openzeppelin/hardhat-upgrades/dist/utils';
 import { expect } from 'chai';
 import fs from 'fs';
 import { ethers } from 'hardhat';
@@ -8,7 +7,7 @@ enum PriceFunction {
     EXP
 }
 
-describe('SupplyPriceResolver Tests', function () {
+describe('TileNFT privileged operations tests', function () {
     const basePrice = ethers.utils.parseEther('0.0001');
     const priceCap = ethers.utils.parseEther('128');
     const multiplier = 2;
@@ -48,7 +47,7 @@ describe('SupplyPriceResolver Tests', function () {
                 '',
                 linearSupplyPriceResolver.address,
                 tileContentProvider.address,
-                ethers.constants.AddressZero,
+                accounts[1].address,
                 'ipfs://metadata');
 
         return {
@@ -119,20 +118,30 @@ describe('SupplyPriceResolver Tests', function () {
             .to.be.revertedWith('Ownable: caller is not the owner');
     });
 
-    it('Should transfer balance with the deployer account', async function () {
-        const { deployer, tileNFT, accounts } = await setup();
-
-        await expect(tileNFT.connect(deployer).transferBalance(deployer.address, ethers.utils.parseEther('128')))
-            .to.be.revertedWith('INVALID_AMOUNT()');
-
-        await tileNFT.connect(accounts[0]).mint({ value: ethers.utils.parseEther('0.0001') });
-        await expect(tileNFT.connect(deployer).transferBalance(deployer.address, ethers.utils.parseEther('0.0001')));
-    });
-
     it('Should not transfer balance with a non-deployer account', async function () {
         const { tileNFT, accounts } = await setup();
 
         await expect(tileNFT.connect(accounts[0]).transferBalance(accounts[0].address, ethers.utils.parseEther('128')))
+            .to.be.revertedWith('Ownable: caller is not the owner');
+    });
+
+    it('Should not transfer balance to 0-address', async function () {
+        const { deployer, tileNFT } = await setup();
+
+        await expect(tileNFT.connect(deployer).transferBalance(ethers.constants.AddressZero, ethers.utils.parseEther('128')))
+            .to.be.revertedWith('INVALID_ADDRESS()');
+    });
+
+    it('Should set price resolver with the deployer account', async function () {
+        const { deployer, tileNFT, accounts } = await setup();
+
+        await expect(tileNFT.connect(deployer).setPriceResolver(accounts[0].address));
+    });
+
+    it('Should not set price resolver with a non-deployer account', async function () {
+        const { tileNFT, accounts } = await setup();
+
+        await expect(tileNFT.connect(accounts[0]).setPriceResolver(accounts[0].address))
             .to.be.revertedWith('Ownable: caller is not the owner');
     });
 });

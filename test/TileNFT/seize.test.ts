@@ -7,7 +7,7 @@ enum PriceFunction {
     EXP
 }
 
-describe('SupplyPriceResolver Tests', function () {
+describe('TileNFT seize tests', function () {
     const basePrice = ethers.utils.parseEther('0.0001');
     const priceCap = ethers.utils.parseEther('128');
     const multiplier = 2;
@@ -47,7 +47,7 @@ describe('SupplyPriceResolver Tests', function () {
                 '',
                 linearSupplyPriceResolver.address,
                 tileContentProvider.address,
-                ethers.constants.AddressZero,
+                accounts[5].address,
                 'ipfs://metadata');
 
         return {
@@ -66,6 +66,14 @@ describe('SupplyPriceResolver Tests', function () {
             .to.emit(tileNFT, 'Transfer').withArgs(ethers.constants.AddressZero, accounts[addressIndex].address, expectedTokenId);
 
         expect(await tileNFT.ownerOf(expectedTokenId)).to.equal(accounts[addressIndex].address);
+    });
+
+    it('Should fail to grab NFT with wrong price', async function () {
+        const { tileNFT, accounts } = await setup();
+
+        let addressIndex = 0;
+        await expect(tileNFT.connect(accounts[addressIndex]).grab(accounts[addressIndex + 1].address, { value: ethers.utils.parseEther('0.0002') }))
+            .to.be.revertedWith('INCORRECT_PRICE()');
     });
 
     it('Should seize NFT from a non-minter address', async function () {
@@ -87,7 +95,54 @@ describe('SupplyPriceResolver Tests', function () {
         expect(await tileNFT.ownerOf(expectedTokenId)).to.equal(accounts[addressIndex + 1].address);
     });
 
-    //fail grab
-    //fail seize
-    // wrong price
+    it('Should fail to seize NFT with incorrect price', async function () {
+        const { tileNFT, accounts } = await setup();
+
+        let expectedTokenId = 1;
+        let addressIndex = 0;
+        await expect(tileNFT.connect(accounts[addressIndex]).grab(accounts[addressIndex + 1].address, { value: ethers.utils.parseEther('0.0001') }))
+            .to.emit(tileNFT, 'Transfer').withArgs(ethers.constants.AddressZero, accounts[addressIndex].address, expectedTokenId);
+
+        expect(await tileNFT.ownerOf(expectedTokenId)).to.equal(accounts[addressIndex].address);
+
+        expect(await tileNFT.addressForId(expectedTokenId)).to.equal(accounts[addressIndex + 1].address);
+        expect(await tileNFT.idForAddress(accounts[addressIndex + 1].address)).to.equal(expectedTokenId);
+
+        await expect(tileNFT.connect(accounts[addressIndex + 1]).seize({ value: ethers.utils.parseEther('0.00001') }))
+            .to.be.revertedWith('INCORRECT_PRICE()');
+    });
+
+    it('Should fail to grab NFT with subsequent mint', async function () {
+        const { tileNFT, accounts } = await setup();
+
+        let expectedTokenId = 1;
+        let addressIndex = 0;
+        await expect(tileNFT.connect(accounts[addressIndex]).grab(accounts[addressIndex + 1].address, { value: ethers.utils.parseEther('0.0001') }))
+            .to.emit(tileNFT, 'Transfer').withArgs(ethers.constants.AddressZero, accounts[addressIndex].address, expectedTokenId);
+
+        await expect(tileNFT.connect(accounts[addressIndex + 2]).grab(accounts[addressIndex + 1].address, { value: ethers.utils.parseEther('0.0001') }))
+            .to.be.revertedWith('ALREADY_MINTED()');
+
+        expect(await tileNFT.ownerOf(expectedTokenId)).to.equal(accounts[addressIndex].address);
+    });
+
+    it('Should fail to seize owned NFT', async function () {
+        const { tileNFT, accounts } = await setup();
+
+        let expectedTokenId = 1;
+        let addressIndex = 0;
+        await expect(tileNFT.connect(accounts[addressIndex]).mint({ value: ethers.utils.parseEther('0.0001') }))
+            .to.emit(tileNFT, 'Transfer').withArgs(ethers.constants.AddressZero, accounts[addressIndex].address, expectedTokenId);
+
+        await expect(tileNFT.connect(accounts[addressIndex]).seize({ value: ethers.utils.parseEther('0.0001') }))
+            .to.be.revertedWith('UNSUPPORTED_OPERATION()');
+    });
+
+    it('Should fail to seize unminted NFT', async function () {
+        const { tileNFT, accounts } = await setup();
+
+        let addressIndex = 0;
+        await expect(tileNFT.connect(accounts[addressIndex]).seize({ value: ethers.utils.parseEther('0.0001') }))
+            .to.be.revertedWith('INVALID_TOKEN()');
+    });
 });
