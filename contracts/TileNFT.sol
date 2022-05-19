@@ -167,6 +167,7 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
     */
   function seize() external payable override returns (uint256 tokenId) {
     tokenId = idForAddress[msg.sender];
+
     if (tokenId == 0) {
       revert INVALID_TOKEN();
     }
@@ -176,7 +177,10 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
       revert UNSUPPORTED_OPERATION();
     }
 
-    if (msg.value != priceResolver.getPrice()) {
+    if (
+      msg.value !=
+      priceResolver.getPriceWithParams(msg.sender, tokenId, abi.encodePacked(totalSupply()))
+    ) {
       revert INCORRECT_PRICE();
     }
 
@@ -271,12 +275,11 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
     }
 
     addressForId[tokenId] = tile;
-
-    _mint(owner, tokenId);
+    idForAddress[tile] = tokenId;
 
     _beforeTokenTransfer(address(0), owner, tokenId);
 
-    emit Transfer(address(0), owner, tokenId);
+    _mint(owner, tokenId);
   }
 
   /**
@@ -289,17 +292,16 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
   ) private {
     require(to != address(0), 'INVALID_RECIPIENT');
 
+    _beforeTokenTransfer(from, to, tokenId);
+
     unchecked {
       balanceOf[from]--;
-
       balanceOf[to]++;
     }
 
     ownerOf[tokenId] = to;
 
     delete getApproved[tokenId];
-
-    _beforeTokenTransfer(from, to, tokenId);
 
     emit Transfer(from, to, tokenId);
   }
