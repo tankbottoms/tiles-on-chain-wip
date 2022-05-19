@@ -192,7 +192,7 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
   /**
     @notice Allows direct mint by priviledged accounts bypassing price checks.
     */
-  function superMint(address _account)
+  function superMint(address _account, address _tile)
     external
     payable
     override
@@ -204,7 +204,7 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
       payable(address(treasury)).transfer(msg.value);
     }
 
-    mintedTokenId = _mint(_account, _account);
+    mintedTokenId = _mint(_account, _tile);
   }
 
   /**

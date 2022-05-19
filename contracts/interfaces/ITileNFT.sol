@@ -23,7 +23,7 @@ interface ITileNFT {
 
   function seize() external payable returns (uint256);
 
-  function superMint(address) external payable returns (uint256);
+  function superMint(address, address) external payable returns (uint256);
 
   function registerMinter(address) external;
 

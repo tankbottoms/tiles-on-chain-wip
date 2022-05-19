@@ -97,4 +97,13 @@ describe('SupplyPriceResolver Tests', function () {
 
         fs.writeFileSync(`tile-${expectedTokenId}.json`, await tileNFT.tokenURI(expectedTokenId));
     });
+
+    it('Should not mint at incorrect price', async function () {
+        const { tileNFT, accounts } = await setup();
+
+        let addressIndex = 0;
+        await expect(tileNFT.connect(accounts[addressIndex]).mint({ value: ethers.utils.parseEther('0.0002') }))
+            .to.be.revertedWith('INCORRECT_PRICE()');
+    });
+
 });
