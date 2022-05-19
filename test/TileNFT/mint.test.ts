@@ -7,7 +7,7 @@ enum PriceFunction {
     EXP
 }
 
-describe('SupplyPriceResolver Tests', function () {
+describe('TileNFT mint tests', function () {
     const basePrice = ethers.utils.parseEther('0.0001');
     const priceCap = ethers.utils.parseEther('128');
     const multiplier = 2;
@@ -34,6 +34,10 @@ describe('SupplyPriceResolver Tests', function () {
             signer: deployer
         });
 
+        const anotherTileContentProvider = await tileContentProviderFactory
+            .connect(deployer)
+            .deploy();
+
         const tileContentProvider = await tileContentProviderFactory
             .connect(deployer)
             .deploy();
@@ -50,10 +54,34 @@ describe('SupplyPriceResolver Tests', function () {
                 ethers.constants.AddressZero,
                 'ipfs://metadata');
 
+        const staticUriTileNFT = await tileNFTFactory
+            .connect(deployer)
+            .deploy(
+                'On-chain Tile',
+                'OT',
+                '',
+                linearSupplyPriceResolver.address,
+                ethers.constants.AddressZero,
+                ethers.constants.AddressZero,
+                'ipfs://metadata');
+
+        const pricelessTileNFT = await tileNFTFactory
+            .connect(deployer)
+            .deploy(
+                'On-chain Tile',
+                'OT',
+                '',
+                ethers.constants.AddressZero,
+                anotherTileContentProvider.address,
+                ethers.constants.AddressZero,
+                'ipfs://metadata');
+
         return {
             deployer,
             accounts,
-            tileNFT
+            tileNFT,
+            staticUriTileNFT,
+            pricelessTileNFT
         };
     }
 
@@ -106,4 +134,31 @@ describe('SupplyPriceResolver Tests', function () {
             .to.be.revertedWith('INCORRECT_PRICE()');
     });
 
+    it('Should get static token URI', async function () {
+        const { staticUriTileNFT, accounts } = await setup();
+
+        let expectedTokenId = 1;
+        let addressIndex = 0;
+        await expect(staticUriTileNFT.connect(accounts[addressIndex]).mint({ value: ethers.utils.parseEther('0.0001') }))
+            .to.emit(staticUriTileNFT, 'Transfer').withArgs(ethers.constants.AddressZero, accounts[addressIndex].address, expectedTokenId);
+
+        expect(await staticUriTileNFT.tokenURI(expectedTokenId)).to.equal('');
+    });
+
+    it('Should not mint without price resolver', async function () {
+        const { pricelessTileNFT, accounts } = await setup();
+
+        let addressIndex = 0;
+        await expect(pricelessTileNFT.connect(accounts[addressIndex]).mint({ value: ethers.utils.parseEther('0.0001') }))
+            .to.be.revertedWith('UNSUPPORTED_OPERATION()');
+    });
+
+    it('Should fail to grab NFT without price resolver', async function () {
+        const { pricelessTileNFT, accounts } = await setup();
+
+        let expectedTokenId = 1;
+        let addressIndex = 0;
+        await expect(pricelessTileNFT.connect(accounts[addressIndex]).grab(accounts[addressIndex + 1].address, { value: ethers.utils.parseEther('0.0001') }))
+            .to.be.revertedWith('UNSUPPORTED_OPERATION()');
+    });
 });

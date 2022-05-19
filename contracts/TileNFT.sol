@@ -69,7 +69,9 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
     treasury = _treasury;
     _contractUri = _metadataUri;
 
-    _tokenUriResolver.setParent(ITileNFT(address(this)));
+    if (address(_tokenUriResolver) != address(0)) {
+      _tokenUriResolver.setParent(ITileNFT(address(this)));
+    }
   }
 
   //*********************************************************************//

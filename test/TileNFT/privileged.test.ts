@@ -38,6 +38,10 @@ describe('TileNFT privileged operations tests', function () {
             .connect(deployer)
             .deploy();
 
+        const anotherTileContentProvider = await tileContentProviderFactory
+            .connect(deployer)
+            .deploy();
+
         const tileNFTFactory = await ethers.getContractFactory('TileNFT', deployer);
         const tileNFT = await tileNFTFactory
             .connect(deployer)
@@ -50,10 +54,22 @@ describe('TileNFT privileged operations tests', function () {
                 accounts[1].address,
                 'ipfs://metadata');
 
+        const balanceTileNFT = await tileNFTFactory
+            .connect(deployer)
+            .deploy(
+                'On-chain Tile',
+                'OT',
+                '',
+                linearSupplyPriceResolver.address,
+                anotherTileContentProvider.address,
+                ethers.constants.AddressZero,
+                'ipfs://metadata');
+
         return {
             deployer,
             accounts,
-            tileNFT
+            tileNFT,
+            balanceTileNFT
         };
     }
 
@@ -116,6 +132,17 @@ describe('TileNFT privileged operations tests', function () {
 
         await expect(tileNFT.connect(accounts[0]).setTreasury(accounts[0].address))
             .to.be.revertedWith('Ownable: caller is not the owner');
+    });
+
+    it('Should transfer balance with the deployer account', async function () {
+        const { deployer, balanceTileNFT, accounts } = await setup();
+
+        await expect(balanceTileNFT.connect(deployer).transferBalance(deployer.address, ethers.utils.parseEther('128')))
+            .to.be.revertedWith('INVALID_AMOUNT()');
+
+        await balanceTileNFT.connect(accounts[0]).mint({ value: ethers.utils.parseEther('0.0001') });
+        expect(await balanceTileNFT.connect(deployer).transferBalance(deployer.address, ethers.utils.parseEther('0.0001')))
+            .to.changeEtherBalance(balanceTileNFT, ethers.utils.parseEther("-0.0001"));;
     });
 
     it('Should not transfer balance with a non-deployer account', async function () {
