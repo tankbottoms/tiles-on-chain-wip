@@ -95,9 +95,7 @@ describe('TileNFT Merkle-tree mint tests', function () {
         let proof = '0x' + accounts[addressIndex].address.slice(2) + merkleItem.proof.map(i => i.slice(2)).join('');
         await expect(
             tileNFT.connect(accounts[addressIndex]).merkleMint(merkleItem.index, merkleItem.data, proof, { value: unlistedPrice }))
-            .to.emit(tileNFT, 'Transfer').withArgs(ethers.constants.AddressZero, accounts[addressIndex].address, expectedTokenId);
-
-        expect(await tileNFT.ownerOf(expectedTokenId)).to.equal(accounts[addressIndex].address);
+            .to.be.revertedWith('INCORRECT_PRICE()');
     });
 
     it('Fail to mint with un-owned proof', async function () {
