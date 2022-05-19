@@ -19,7 +19,11 @@ interface ITileNFT {
 
   function grab(address) external payable returns (uint256);
 
-  function merkleMint(uint256, bytes calldata) external payable returns (uint256);
+  function merkleMint(
+    uint256,
+    address,
+    bytes calldata
+  ) external payable returns (uint256);
 
   function seize() external payable returns (uint256);
 

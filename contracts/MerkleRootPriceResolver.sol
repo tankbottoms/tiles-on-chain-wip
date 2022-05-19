@@ -61,16 +61,19 @@ contract MerkleRootPriceResolver is IPriceResolver {
   /**
       @notice Validates the privided arguments against the configured Merkle root.
       @param account Account to validate.
-      @param tokenId Token id to validate.
+      @param index Token id to validate.
       @param params Item at index 0 is expected to be the Merkle tree proof.
      */
   function getPriceWithParams(
     address account,
-    uint256 tokenId,
+    uint256 index,
     bytes calldata params
   ) public view virtual override returns (uint256 price) {
-    bytes32 node = keccak256(abi.encodePacked(account, tokenId));
-    bytes32[] memory proof = bytesToBytes32Arr(params, 0);
+    address data = bytesToAddress(params, 0);
+    bytes32[] memory proof = bytesToBytes32Arr(params, 20);
+
+    bytes32 node = keccak256(abi.encodePacked(index, account, data));
+
     if (!MerkleProof.verify(proof, merkleRoot, node)) {
       revert INVALID_PROOF();
     }
@@ -83,8 +86,20 @@ contract MerkleRootPriceResolver is IPriceResolver {
     pure
     returns (bytes32[] memory arr)
   {
-    for (uint256 i = 0; i < b.length; i++) {
-      arr[b.length % 32] |= bytes32(b[offset + i] & 0xFF) >> (i * 8);
+    arr = new bytes32[]((b.length - offset) / 32);
+
+    for (uint256 i = offset; i < b.length; i++) {
+      arr[(i - offset) / 32] |= bytes32(b[i] & 0xFF) >> (((i - offset) % 32) * 8);
     }
+  }
+
+  function bytesToAddress(bytes memory b, uint256 offset) private pure returns (address account) {
+    bytes32 raw;
+
+    for (uint256 i = 0; i < 20; i++) {
+      raw |= bytes32(b[offset + i] & 0xFF) >> (i * 8);
+    }
+
+    account = address(uint160(uint256(raw >> 96)));
   }
 }
