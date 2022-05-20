@@ -14,7 +14,7 @@ contract IndexedTokenURIResolver is ITokenUriResolver {
   string public baseUri;
 
   /**
-      @notice An ERC721-style token URI resolver that appents token id to the end of a base uri.
+      @notice An ERC721-style token URI resolver that appends token id to the end of a base uri.
       @param _baseUri Root URI
      */
   constructor(string memory _baseUri) {
