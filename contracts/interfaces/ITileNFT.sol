@@ -2,11 +2,12 @@
 pragma solidity ^0.8.6;
 
 import '@jbx-protocol/contracts-v2/contracts/interfaces/IJBProjectPayer.sol';
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 import './IPriceResolver.sol';
 
 /**
-  @notice A price resolver interface meant for NFT contracts to calculate price based on parameters.
+  @notice Tiles on chain interface definition.
  */
 interface ITileNFT {
   function idForAddress(address) external view returns (uint256);
@@ -37,5 +38,13 @@ interface ITileNFT {
 
   function setTreasury(IJBProjectPayer) external;
 
+  function setContractUri(string calldata) external;
+
   function transferBalance(address payable, uint256) external;
+
+  function transferTokenBalance(
+    IERC20 token,
+    address to,
+    uint256 amount
+  ) external;
 }

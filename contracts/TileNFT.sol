@@ -4,6 +4,7 @@ pragma solidity ^0.8.6;
 import '@jbx-protocol/contracts-v2/contracts/interfaces/IJBProjectPayer.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 import './interfaces/IPriceResolver.sol';
 import './interfaces/ITileNFT.sol';
@@ -108,7 +109,7 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
       revert INCORRECT_PRICE();
     }
 
-    if (address(treasury) != address(0)) {
+    if (address(treasury) != address(0) && msg.value > 0) {
       payable(address(treasury)).transfer(msg.value);
     }
 
@@ -132,7 +133,7 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
       revert INCORRECT_PRICE();
     }
 
-    if (address(treasury) != address(0)) {
+    if (address(treasury) != address(0) && msg.value > 0) {
       payable(address(treasury)).transfer(msg.value);
     }
 
@@ -155,7 +156,7 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
       revert INCORRECT_PRICE();
     }
 
-    if (address(treasury) != address(0)) {
+    if (address(treasury) != address(0) && msg.value > 0) {
       payable(address(treasury)).transfer(msg.value);
     }
 
@@ -222,8 +223,8 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
   }
 
   /**
-      @notice Changes the associated price resolver.
-     */
+    @notice Changes the associated price resolver.
+    */
   function setPriceResolver(IPriceResolver _priceResolver) external override onlyOwner {
     priceResolver = _priceResolver;
   }
@@ -233,6 +234,13 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
     */
   function setTreasury(IJBProjectPayer _treasury) external override onlyOwner {
     treasury = _treasury;
+  }
+
+  /**
+    @notice Changes contract metadata uri.
+    */
+  function setContractUri(string calldata contractUri) external override onlyOwner {
+    _contractUri = contractUri;
   }
 
   /**
@@ -250,12 +258,20 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
     account.transfer(amount);
   }
 
+  function transferTokenBalance(
+    IERC20 token,
+    address to,
+    uint256 amount
+  ) external override onlyOwner {
+    token.transfer(to, amount);
+  }
+
   //*********************************************************************//
   // ----------------------- private transactions ---------------------- //
   //*********************************************************************//
 
   /**
-    @notice Mints the ERC721 token, returns minted token id.
+    @notice Mints the token, returns minted token id.
 
     @param owner Owner of the new token.
     @param tile Address to generate the tile from.
