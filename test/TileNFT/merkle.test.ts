@@ -22,6 +22,10 @@ describe('TileNFT Merkle-tree mint tests', function () {
             .connect(deployer)
             .deploy(merkleData.merkleRoot, listedPrice, unlistedPrice);
 
+        const zeroMerkleRootPriceResolverResolver = await merkleRootPriceResolverFactory
+            .connect(deployer)
+            .deploy(merkleData.merkleRoot, listedPrice, 0);
+
         const tileContentProviderFactory = await ethers.getContractFactory('TileContentProvider', {
             libraries: { StringHelpers: stringHelpersLibrary.address },
             signer: deployer
@@ -48,7 +52,8 @@ describe('TileNFT Merkle-tree mint tests', function () {
             accounts,
             tileNFT,
             merkleRootPriceResolverResolver,
-            merkleData
+            merkleData,
+            zeroMerkleRootPriceResolverResolver
         };
     }
 
@@ -107,5 +112,15 @@ describe('TileNFT Merkle-tree mint tests', function () {
         await expect(
             tileNFT.connect(accounts[addressIndex]).merkleMint(merkleItem.index, merkleItem.data, proof, { value: listedPrice }))
             .to.be.revertedWith('INVALID_PROOF()');
+    });
+
+    it('Unsupported price requests', async function () {
+        const { merkleRootPriceResolverResolver, zeroMerkleRootPriceResolverResolver, accounts } = await setup();
+
+        expect(await merkleRootPriceResolverResolver.getPrice()).to.equal(unlistedPrice);
+        expect(await merkleRootPriceResolverResolver.getPriceFor(accounts[0].address)).to.equal(unlistedPrice);
+        expect(await merkleRootPriceResolverResolver.getPriceOf(0)).to.equal(unlistedPrice);
+
+        await expect(zeroMerkleRootPriceResolverResolver.getPrice()).to.be.revertedWith('NO_UNLISTED_PRICE()');
     });
 });
