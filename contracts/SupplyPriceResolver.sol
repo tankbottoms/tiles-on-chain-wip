@@ -93,8 +93,8 @@ contract SupplyPriceResolver is IPriceResolver {
   }
 
   function bytesToUint(bytes memory b) private pure returns (uint256 number) {
-    for (uint256 i = 0; i < b.length; i++) {
-      number = number + uint256(uint8(b[i])) * (2**(8 * (b.length - (i + 1))));
+    for (uint256 i = 0; i < 32; i++) {
+      number = number + uint256(uint8(b[i])) * (2**(8 * (32 - (i + 1))));
     }
   }
 }

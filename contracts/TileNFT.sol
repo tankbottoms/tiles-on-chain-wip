@@ -128,7 +128,8 @@ contract TileNFT is ERC721Enumerable, Ownable, ReentrancyGuard, ITileNFT {
     }
 
     if (
-      msg.value != priceResolver.getPriceWithParams(msg.sender, 0, abi.encodePacked(totalSupply()))
+      msg.value !=
+      priceResolver.getPriceWithParams(msg.sender, 0, abi.encodePacked(totalSupply(), tile))
     ) {
       revert INCORRECT_PRICE();
     }
