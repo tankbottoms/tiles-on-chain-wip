@@ -171,4 +171,17 @@ describe('TileNFT privileged operations tests', function () {
         await expect(tileNFT.connect(accounts[0]).setPriceResolver(accounts[0].address))
             .to.be.revertedWith('Ownable: caller is not the owner');
     });
+
+    it('Should set contract metadata uri with the deployer account', async function () {
+        const { deployer, tileNFT, accounts } = await setup();
+
+        await expect(tileNFT.connect(deployer).setContractUri('ipfs://...'));
+    });
+
+    it('Should not set contract metadata uri with a non-deployer account', async function () {
+        const { tileNFT, accounts } = await setup();
+
+        await expect(tileNFT.connect(accounts[0]).setContractUri('ipfs://...'))
+            .to.be.revertedWith('Ownable: caller is not the owner');
+    });
 });
