@@ -4,12 +4,8 @@
 
 module.exports = {
   skipFiles: [
-    'components/AbstractTileNFTContent.sol',
-    'components/Base64.sol',
-    'components/ERC721Enumerable.sol',
-    'components/Ring.sol',
-    'components/StringHelpers.sol',
-    'components/TileContentProvider.sol'
+    'components',
+    'interfaces'
   ],
   configureYulOptimizer: true,
   measureStatementCoverage: false,

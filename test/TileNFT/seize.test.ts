@@ -1,5 +1,4 @@
 import { expect } from 'chai';
-import fs from 'fs';
 import { ethers } from 'hardhat';
 
 enum PriceFunction {
