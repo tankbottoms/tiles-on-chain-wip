@@ -68,7 +68,8 @@ describe('TileNFT legacy mint tests', function () {
         return {
             deployer,
             accounts,
-            tileNFT
+            tileNFT,
+            legacyOwnershipPriceResolver
         };
     }
 
@@ -80,5 +81,22 @@ describe('TileNFT legacy mint tests', function () {
             .to.emit(tileNFT, 'Transfer').withArgs(ethers.constants.AddressZero, accounts[0].address, expectedTokenId);
 
         expect(await tileNFT.ownerOf(expectedTokenId)).to.equal(accounts[0].address);
+    });
+
+    it('Should not mint at 0 cost, not legacy owner', async function () {
+        const { tileNFT, accounts } = await setup();
+
+        let expectedTokenId = 1;
+        await expect(tileNFT.connect(accounts[1]).grab(legacyTuples[0].address, { value: ethers.utils.parseEther('0') }))
+            .to.be.revertedWith('INCORRECT_PRICE()');
+    });
+
+
+    it('Unsupported price requests', async function () {
+        const { legacyOwnershipPriceResolver, accounts } = await setup();
+
+        await expect(legacyOwnershipPriceResolver.getPrice()).to.be.revertedWith('UNSUPPORTED_OPERATION()');
+        await expect(legacyOwnershipPriceResolver.getPriceFor(accounts[0].address)).to.be.revertedWith('UNSUPPORTED_OPERATION()');
+        await expect(legacyOwnershipPriceResolver.getPriceOf(0)).to.be.revertedWith('UNSUPPORTED_OPERATION()');
     });
 });
