@@ -1,8 +1,18 @@
 # Tiles On Chain
 
-Inspiration from [Neoplastics](https://neolastics.com/) and (TilesDAO)[https://tiles.art/#/] with the later straight up. Reverse engineering the minified code from [tiles-api](https://github.com/TileDAO/tiles-api) the follow repository moves the entire Tile to be generated on-chain.
+Inspiration from [Neoplastics](https://neolastics.com/) and (TilesDAO)[https://tiles.art/#/] with the later straight up. All worship Peri.  Reversed engineered the minified code from [tiles-api](https://github.com/TileDAO/tiles-api), the follow repository moves the entire Tile to be generated on-chain. Abstracts some bits in preparation for the Juicebox + NFT orgy-poolooza. 
 
-## Build
+## Build, Run Coverage
+
+```bash
+yarn
+npx hardhat compile
+yarn run coverage
+```
+
+Proof:
+
+![Works on my machine](/docs/works-on-my-machine.png)
 
 ### Deploy to Rinkeby
 
